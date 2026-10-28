@@ -228,11 +228,12 @@ main {
   font-family: var(--font-c); font-weight: 600; font-size: 28px; font-variant-numeric: tabular-nums;
 }
 .colon { font-family: var(--font-c); font-size: 26px; font-weight: 600; color: var(--muted); padding-bottom: 3px; }
-.ampm {
-  flex: none; height: 34px; min-width: 42px; margin-left: 4px; padding: 0 6px; border-radius: 8px;
-  background: var(--accent-soft); color: var(--accent-text); font-weight: 700; font-size: 14px; letter-spacing: 0.02em;
+.ap-seg { flex: none; display: flex; flex-direction: column; gap: 3px; margin-left: 4px; }
+.ap-btn {
+  height: 22px; min-width: 40px; padding: 0 6px; border-radius: 6px;
+  background: var(--chip); color: var(--muted); font-weight: 700; font-size: 12px; letter-spacing: 0.02em;
 }
-.ampm:active { opacity: 0.7; }
+.ap-btn[aria-pressed="true"] { background: var(--accent); color: #fff; }
 .times.is12 { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
 .tfield, .hm { min-width: 0; }
 .times.is12 .tsep { display: none; }
@@ -379,7 +380,8 @@ body.typing .bar { transform: translateY(110%); }
   .rrow { grid-template-columns: minmax(0, 1fr) 100px 40px; }
   .times.is12 .tin { width: 30px; font-size: 23px; }
   .times.is12 .colon { font-size: 22px; }
-  .ampm { min-width: 34px; margin-left: 2px; padding: 0 4px; font-size: 13px; }
+  .ap-seg { margin-left: 2px; }
+  .ap-btn { min-width: 34px; padding: 0 4px; }
   .rate-field .rl { font-size: 11px; }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -978,7 +980,8 @@ body.typing .bar { transform: translateY(110%); }
         <input class="tin" data-f="${hf}" ${attrs} placeholder="HH" value="${esc(hv)}" aria-label="${label} hour (${twelve ? '1–12' : '0–23'})">
         <span class="colon" aria-hidden="true">:</span>
         <input class="tin" data-f="${mf}" ${attrs} placeholder="MM" value="${esc(d[mf])}" aria-label="${label} minute">
-        ${twelve ? `<button type="button" class="ampm" data-act="ampm" data-w="${w}" aria-label="${label} AM or PM, tap to switch">${apOf(d, w)}</button>` : ''}
+        ${twelve ? `<div class="ap-seg" role="group" aria-label="${label} AM or PM">${['AM', 'PM'].map(ap =>
+          `<button type="button" class="ap-btn" data-act="ampm" data-w="${w}" data-v="${ap}" aria-pressed="${apOf(d, w) === ap}">${ap}</button>`).join('')}</div>` : ''}
       </div>
     </div>`;
   }
@@ -1154,12 +1157,14 @@ body.typing .bar { transform: translateY(110%); }
     } else if (act === 'ampm') {
       const d = ensureDay(date);
       const w = btn.dataset.w;
-      const ap = apOf(d, w) === 'AM' ? 'PM' : 'AM';
+      const ap = btn.dataset.v;
       d[w + 'ap'] = ap;
       if (d[w + 'h']) d[w + 'h'] = pad2(Number(d[w + 'h']) % 12 + (ap === 'PM' ? 12 : 0));
-      btn.textContent = ap;
+      btn.parentNode.querySelectorAll('.ap-btn').forEach(b => b.setAttribute('aria-pressed', String(b === btn)));
       rememberTimes(d);
       afterChange(date);
+      // Continue the entry flow: start AM/PM → end hour.
+      if (w === 's' && !d.eh) { const eh = $('[data-f="eh"]', card); if (eh) eh.focus(); }
     } else if (act === 'add-reimb') {
       const d = ensureDay(date);
       const r = { id: uid(), type: 'Cab', amount: '', desc: '' };
@@ -1216,7 +1221,8 @@ body.typing .bar { transform: translateY(110%); }
         if (!d[mf]) d[mf] = '00';
       }
       rememberTimes(d);
-      if (v.length === 2) {
+      // In 12-hour mode stop after the start minutes so AM/PM isn't skipped.
+      if (v.length === 2 && !(f === 'sm' && state.settings.clock === '12h')) {
         const next = TIME_FIELDS[TIME_FIELDS.indexOf(f) + 1];
         const nextEl = next && $(`[data-f="${next}"]`, card);
         if (nextEl) {
