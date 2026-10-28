@@ -10,9 +10,10 @@
 <meta name="format-detection" content="telephone=no">
 <meta name="color-scheme" content="light dark">
 <meta name="theme-color" content="#F7F8FA" id="themeColor">
-<meta name="description" content="Half-monthly timesheet: hours, pay, sites, notes and reimbursements. Stored locally on your device.">
+<meta name="description" content="Free timesheet for your phone: hours, pay, sites, notes and reimbursements. No sign-up — data stays on your device.">
 <title>Timesheet</title>
-<link rel="apple-touch-icon" id="touchIcon" href="">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" id="touchIcon" href="icons/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
@@ -32,9 +33,10 @@
   --muted: #667085;
   --press: rgba(15, 23, 42, 0.06);
   --danger: #DC2626;
+  --danger-soft: rgba(220, 38, 38, 0.10);
   --shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
   --overlay: rgba(15, 23, 42, 0.42);
-  --header-h: 170px;
+  --header-h: 120px;
   --bar-h: 76px;
   --font: 'Barlow', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-c: 'Barlow Condensed', 'Barlow', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -54,6 +56,7 @@
     --muted: #8D98AB;
     --press: rgba(255, 255, 255, 0.06);
     --danger: #F87171;
+    --danger-soft: rgba(248, 113, 113, 0.14);
     --shadow: none;
     --overlay: rgba(0, 0, 0, 0.6);
     color-scheme: dark;
@@ -72,6 +75,7 @@
   --muted: #8D98AB;
   --press: rgba(255, 255, 255, 0.06);
   --danger: #F87171;
+  --danger-soft: rgba(248, 113, 113, 0.14);
   --shadow: none;
   --overlay: rgba(0, 0, 0, 0.6);
   color-scheme: dark;
@@ -128,15 +132,45 @@ svg { display: block; }
 }
 .pnav:active { background: var(--chip); }
 .plabel { flex: 1; min-width: 0; text-align: center; }
-.pmain { font-family: var(--font-c); font-weight: 600; font-size: 21px; line-height: 1.1; }
+.pmain { font-family: var(--font-c); font-weight: 600; font-size: 21px; line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .psub { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
 
-.meta-row { display: flex; gap: 8px; }
-.summary {
-  display: flex; flex-direction: column; gap: 12px; margin-bottom: 12px; padding: 12px;
-  background: var(--surface); border: 1px solid var(--border); border-radius: 16px; box-shadow: var(--shadow);
+/* Main */
+main {
+  padding: 12px max(16px, env(safe-area-inset-right)) calc(var(--bar-h) + env(safe-area-inset-bottom) + 24px) max(16px, env(safe-area-inset-left));
+  display: flex; flex-direction: column; gap: 12px;
 }
-.summary .rate-field { background: var(--input); box-shadow: none; }
+.panel {
+  display: flex; flex-direction: column; gap: 12px; padding: 12px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 16px; box-shadow: var(--shadow);
+  scroll-margin-top: calc(var(--header-h) + 8px);
+}
+.panel-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.panel-head h2 { margin: 0; font-family: var(--font-c); font-weight: 700; font-size: 20px; letter-spacing: 0.01em; }
+.section-title { margin: 4px 2px -4px; font-family: var(--font-c); font-weight: 700; font-size: 20px; }
+.pill-btn {
+  height: 34px; padding: 0 14px; border-radius: 999px; flex: none;
+  background: var(--accent-soft); color: var(--accent-text); font-weight: 600; font-size: 15px;
+}
+.pill-btn:active { opacity: 0.75; }
+
+.meta-row { display: flex; gap: 8px; }
+.rate-field {
+  flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; height: 44px; padding: 0 12px;
+  border: 1px solid var(--border); background: var(--input); border-radius: 12px;
+}
+.rate-field:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.rate-field .rl { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; white-space: nowrap; }
+.rate-field .cur, .rate-field .per { font-family: var(--font-c); font-size: 18px; color: var(--muted); white-space: nowrap; }
+.rate-field input {
+  flex: 1; min-width: 0; width: 0; border: 0; outline: 0; background: transparent; padding: 0;
+  font-family: var(--font-c); font-weight: 600; font-size: 20px; text-align: right; font-variant-numeric: tabular-nums;
+}
+.today-btn {
+  height: 44px; padding: 0 16px; border-radius: 12px; flex: none;
+  background: var(--accent-soft); color: var(--accent-text); font-weight: 600; font-size: 15px;
+}
+.today-btn:active { opacity: 0.75; }
 .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
 .stat { min-width: 0; padding: 8px 6px; border-radius: 12px; background: var(--chip); text-align: center; }
 .stat b {
@@ -153,35 +187,38 @@ svg { display: block; }
 .dot.today { box-shadow: inset 0 0 0 2px var(--accent); }
 .dot.worked.today { box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.7); }
 .dot:active { transform: scale(0.94); }
-.rate-field {
-  flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; height: 44px; padding: 0 12px;
-  border: 1px solid var(--border); background: var(--surface); border-radius: 12px; box-shadow: var(--shadow);
-}
-.rate-field:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
-.rate-field .rl { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; white-space: nowrap; }
-.rate-field .cur, .rate-field .per { font-family: var(--font-c); font-size: 18px; color: var(--muted); }
-.rate-field input {
-  flex: 1; min-width: 0; width: 0; border: 0; outline: 0; background: transparent; padding: 0;
-  font-family: var(--font-c); font-weight: 600; font-size: 20px; text-align: right; font-variant-numeric: tabular-nums;
-}
-.today-btn {
-  height: 44px; padding: 0 16px; border-radius: 12px; flex: none;
-  background: var(--accent-soft); color: var(--accent-text); font-weight: 600; font-size: 15px;
-}
-.today-btn:active { opacity: 0.75; }
 
-/* Main list */
-main {
-  padding: 12px max(16px, env(safe-area-inset-right)) calc(var(--bar-h) + env(safe-area-inset-bottom) + 24px) max(16px, env(safe-area-inset-left));
-}
 .notice {
   display: flex; align-items: center; gap: 10px; width: 100%;
-  margin-bottom: 10px; padding: 12px 14px; border-radius: 14px; text-align: left;
+  padding: 12px 14px; border-radius: 14px; text-align: left;
   background: var(--accent-soft); color: var(--text); font-size: 14px;
 }
 .notice b { color: var(--accent-text); }
-.days { display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.notice .grow { flex: 1; min-width: 0; }
+.notice .x { width: 32px; height: 32px; flex: none; border-radius: 50%; display: grid; place-items: center; color: var(--muted); }
+.notice .act { flex: none; height: 32px; padding: 0 12px; border-radius: 999px; background: var(--accent); color: #fff; font-weight: 600; font-size: 14px; }
 
+/* Reimbursements panel */
+.rlist { display: flex; flex-direction: column; }
+.ritem {
+  display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; align-items: center; gap: 12px;
+  width: 100%; padding: 10px 2px; text-align: left; border-top: 1px solid var(--border);
+}
+.ritem:first-child { border-top: 0; }
+.ritem:active { background: var(--press); }
+.emo { width: 40px; height: 40px; border-radius: 12px; background: var(--chip); display: grid; place-items: center; font-size: 21px; line-height: 1; }
+.rtext { min-width: 0; display: flex; flex-direction: column; }
+.rname { font-weight: 600; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rname .rnote { font-weight: 400; color: var(--muted); }
+.rdate { font-size: 13px; color: var(--muted); }
+.ramt { font-family: var(--font-c); font-weight: 700; font-size: 19px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ramt.zero { font-family: var(--font); font-weight: 600; font-size: 13px; color: var(--danger); }
+.r-empty { padding: 14px; border: 1px dashed var(--border); border-radius: 12px; text-align: center; font-size: 14px; color: var(--muted); }
+.r-foot { display: flex; justify-content: space-between; align-items: baseline; padding-top: 10px; border-top: 1px solid var(--border); font-weight: 600; }
+.r-foot b { font-family: var(--font-c); font-size: 20px; font-variant-numeric: tabular-nums; }
+
+/* Day cards */
+.days { display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; list-style: none; }
 .card {
   position: relative;
   background: var(--surface); border: 1px solid var(--border); border-radius: 16px; overflow: hidden;
@@ -229,6 +266,7 @@ main {
   border-top: 1px solid var(--border); padding: 14px 12px 14px;
   display: flex; flex-direction: column; gap: 14px;
 }
+.stack { display: flex; flex-direction: column; gap: 14px; }
 .seg { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; padding: 3px; border-radius: 12px; background: var(--chip); }
 .seg.seg3 { grid-template-columns: 1fr 1fr 1fr; }
 .seg-btn { height: 40px; border-radius: 10px; font-weight: 600; font-size: 15px; color: var(--muted); transition: background 0.15s, color 0.15s; }
@@ -265,6 +303,13 @@ main {
 .times.is12 .tsep { display: none; }
 .times.is12 .tin { width: 38px; font-size: 26px; }
 
+.chips { display: flex; gap: 6px; }
+.chip-btn {
+  flex: 1; min-width: 0; height: 38px; border-radius: 10px; background: var(--chip); color: var(--muted);
+  font-weight: 600; font-size: 14px; white-space: nowrap;
+}
+.chip-btn[aria-pressed="true"] { background: var(--accent); color: #fff; }
+
 .calc {
   display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;
   padding: 10px 12px; border-radius: 12px; background: var(--accent-soft); font-size: 14px;
@@ -277,12 +322,18 @@ main {
 .warn { color: var(--danger); font-family: var(--font); font-size: 14px; font-weight: 600; }
 
 .field { display: block; }
-.field input, .field textarea, .text-in {
+.field input, .field textarea, .field select, .text-in {
   width: 100%; padding: 12px 14px; border: 1px solid var(--border); border-radius: 12px;
   background: var(--input); font-size: 16px; outline: 0; resize: none; -webkit-appearance: none; appearance: none;
 }
+.field select, select.sel {
+  padding-right: 34px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238D98AB' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 12px center;
+}
 .field textarea { min-height: 72px; line-height: 1.4; }
-.field input:focus, .field textarea:focus, .text-in:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.field input:focus, .field textarea:focus, .field select:focus, .text-in:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; }
 
 .reimb-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
 .reimb-head .flabel { margin: 0; }
@@ -359,21 +410,71 @@ body.typing .bar { transform: translateY(110%); }
   display: flex; flex-direction: column; gap: 16px;
 }
 .overlay.show .sheet { transform: none; }
+/* Sheets scroll; their sections must keep full height instead of being squashed by flexbox. */
+.sheet > * { flex-shrink: 0; }
 .grabber { width: 36px; height: 5px; margin: 2px auto -6px; border-radius: 3px; background: var(--border); flex: none; }
-.sheet-head { display: flex; align-items: center; justify-content: space-between; }
+.sheet-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .sheet-head h2 { margin: 0; font-family: var(--font-c); font-weight: 700; font-size: 24px; }
 .done-btn { height: 36px; padding: 0 12px; border-radius: 10px; color: var(--accent-text); font-weight: 600; }
 .done-btn:active { background: var(--accent-soft); }
 .hint { margin: -8px 0 0; font-size: 13px; color: var(--muted); }
+.sec-title { margin: 6px 0 -6px; font-family: var(--font-c); font-weight: 700; font-size: 19px; }
 .group { display: flex; flex-direction: column; border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
 .row-btn {
-  display: flex; align-items: center; justify-content: space-between; min-height: 50px; padding: 0 14px; text-align: left;
-  font-weight: 500; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 50px; padding: 0 14px; text-align: left;
+  font-weight: 500; border-bottom: 1px solid var(--border); color: var(--text); text-decoration: none;
 }
 .row-btn:last-child { border-bottom: 0; }
 .row-btn:active { background: var(--press); }
 .row-btn.danger { color: var(--danger); }
-.row-btn svg { color: var(--muted); }
+.row-btn svg { color: var(--muted); flex: none; }
+.row-btn .meta { color: var(--muted); font-size: 14px; }
+.btn-primary, .btn-secondary, .btn-danger {
+  height: 50px; padding: 0 18px; border-radius: 14px; font-weight: 600; font-size: 17px;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:active { background: var(--accent-press); }
+.btn-secondary { background: var(--chip); color: var(--text); }
+.btn-danger { background: var(--danger-soft); color: var(--danger); }
+.sheet-actions { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 10px; }
+.sheet-actions.single { grid-template-columns: 1fr; }
+
+.cat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 8px; }
+.cat-chip {
+  min-height: 46px; padding: 6px 10px; border-radius: 12px; border: 1px solid var(--border); background: var(--input);
+  display: flex; align-items: center; justify-content: center; gap: 6px; font-weight: 600; font-size: 14px; text-align: center;
+}
+.cat-chip .ce { font-size: 19px; line-height: 1; }
+.cat-chip .cn { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cat-chip[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); color: var(--accent-text); box-shadow: 0 0 0 1px var(--accent) inset; }
+.cat-chip.new { border-style: dashed; color: var(--accent-text); }
+.new-cat { display: grid; grid-template-columns: 58px minmax(0, 1fr) auto; gap: 8px; }
+.new-cat input, .cat-row input {
+  height: 44px; padding: 0 12px; border: 1px solid var(--border); border-radius: 12px; background: var(--input); font-size: 16px; outline: 0; min-width: 0;
+}
+.new-cat input:focus, .cat-row input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.new-cat .emo-in, .cat-row .emo-in { text-align: center; font-size: 21px; padding: 0 4px; }
+.new-cat button { height: 44px; padding: 0 16px; border-radius: 12px; background: var(--accent); color: #fff; font-weight: 600; }
+.amt-big {
+  display: flex; align-items: center; gap: 6px; height: 60px; padding: 0 16px;
+  border: 1px solid var(--border); border-radius: 14px; background: var(--input);
+}
+.amt-big:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.amt-big span { font-family: var(--font-c); font-size: 26px; color: var(--muted); }
+.amt-big input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; font-family: var(--font-c); font-weight: 700; font-size: 30px; font-variant-numeric: tabular-nums; }
+.cat-list { display: flex; flex-direction: column; }
+.cat-row { display: grid; grid-template-columns: 58px minmax(0, 1fr) 40px; gap: 8px; padding: 8px; border-bottom: 1px solid var(--border); }
+.cat-row:last-child { border-bottom: 0; }
+.cat-row .del { width: 40px; height: 44px; border-radius: 10px; color: var(--muted); display: grid; place-items: center; }
+.cat-row .del:active { background: var(--press); color: var(--danger); }
+.welcome-hero { text-align: center; padding: 6px 0 0; }
+.welcome-hero .big { font-size: 44px; line-height: 1; }
+.welcome-hero h2 { margin: 8px 0 4px; font-family: var(--font-c); font-weight: 700; font-size: 28px; }
+.welcome-hero p { margin: 0; color: var(--muted); font-size: 15px; }
+.perks { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; text-align: center; font-size: 12px; color: var(--muted); }
+.perks div { padding: 10px 6px; border-radius: 12px; background: var(--chip); }
+.perks span { display: block; font-size: 20px; margin-bottom: 2px; }
 .preview {
   margin: 0; max-height: 40vh; overflow: auto; padding: 12px 14px; border-radius: 12px;
   background: var(--chip); font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 12.5px; line-height: 1.45;
@@ -397,6 +498,8 @@ body.typing .bar { transform: translateY(110%); }
 .ss-actions { background: var(--surface); border-radius: 12px; overflow: hidden; }
 .ss-row { width: 100%; min-height: 52px; padding: 0 16px; display: flex; align-items: center; justify-content: space-between; font-size: 16px; text-align: left; }
 .ss-row:active { background: var(--press); }
+.ss-row + .ss-row { border-top: 1px solid var(--border); }
+.ss-row.primary { color: var(--accent-text); font-weight: 600; }
 .share-panel { display: flex; flex-direction: column; gap: 16px; }
 .page-preview {
   max-height: 44vh; max-height: 44dvh; overflow-y: auto; -webkit-overflow-scrolling: touch;
@@ -404,8 +507,6 @@ body.typing .bar { transform: translateY(110%); }
 }
 .page-preview img { display: block; width: 100%; height: auto; -webkit-touch-callout: default; }
 .page-loading { padding: 40px 16px; text-align: center; color: #667085; font-size: 14px; }
-.ss-row + .ss-row { border-top: 1px solid var(--border); }
-.ss-row.primary { color: var(--accent-text); font-weight: 600; }
 .ss-preview summary { padding: 2px 0; color: var(--accent-text); font-size: 14px; font-weight: 600; cursor: pointer; }
 .ss-preview .preview { margin-top: 8px; background: var(--surface); }
 
@@ -413,13 +514,20 @@ body.typing .bar { transform: translateY(110%); }
 .toast {
   position: fixed; left: 50%; z-index: 60; bottom: calc(var(--bar-h) + env(safe-area-inset-bottom) + 14px);
   max-width: calc(100% - 32px); padding: 10px 16px; border-radius: 12px;
-  background: #0F172A; color: #fff; font-size: 14px; font-weight: 500; text-align: center;
+  display: flex; align-items: center; gap: 14px;
+  background: #0F172A; color: #fff; font-size: 14px; font-weight: 500;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
   transform: translate(-50%, 12px); opacity: 0; pointer-events: none; transition: opacity 0.2s, transform 0.2s;
 }
+.toast button { color: #60A5FA; font-weight: 700; font-size: 14px; padding: 4px 2px; }
 :root[data-theme="dark"] .toast { background: #E7EBF2; color: #0F172A; }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .toast { background: #E7EBF2; color: #0F172A; } }
+:root[data-theme="dark"] .toast button { color: #2563EB; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .toast { background: #E7EBF2; color: #0F172A; }
+  :root:not([data-theme="light"]) .toast button { color: #2563EB; }
+}
 .toast.show { opacity: 1; transform: translate(-50%, 0); }
+.toast.show.has-action { pointer-events: auto; }
 
 @media (max-width: 360px) {
   .send-btn { padding: 0 14px; font-size: 16px; }
@@ -431,6 +539,8 @@ body.typing .bar { transform: translateY(110%); }
   .ap-seg { margin-left: 2px; }
   .ap-btn { min-width: 34px; padding: 0 4px; }
   .rate-field .rl { font-size: 11px; }
+  .chip-btn { font-size: 13px; }
+  .cat-grid { grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; scroll-behavior: auto !important; }
@@ -466,11 +576,20 @@ body.typing .bar { transform: translateY(110%); }
 </header>
 
 <main class="wrap" id="main">
-  <section class="summary" aria-label="Period summary">
+  <div class="notice" id="installHint" hidden>
+    <span aria-hidden="true" style="font-size:20px">📲</span>
+    <span class="grow" id="installText">Install: tap <b>Share</b>, then <b>Add to Home Screen</b>.</span>
+    <button class="act" id="installBtn" type="button" hidden>Install</button>
+    <button class="x" id="installClose" type="button" aria-label="Dismiss">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+    </button>
+  </div>
+
+  <section class="panel" aria-label="Period summary">
     <div class="meta-row">
       <label class="rate-field">
         <span class="rl">Hourly rate</span>
-        <span class="cur">$</span>
+        <span class="cur" id="rateCur">$</span>
         <input id="rateInput" type="text" inputmode="decimal" autocomplete="off" placeholder="0.00" aria-label="Hourly rate for this period">
         <span class="per">/hr</span>
       </label>
@@ -479,15 +598,27 @@ body.typing .bar { transform: translateY(110%); }
     <div class="stats">
       <div class="stat"><span class="lbl">Worked</span><b id="stWorked">0</b></div>
       <div class="stat"><span class="lbl">Days off</span><b id="stOff">0</b></div>
-      <div class="stat"><span class="lbl">Wages</span><b id="stWages">$0.00</b></div>
-      <div class="stat"><span class="lbl">Reimb.</span><b id="stReimb">$0.00</b></div>
+      <div class="stat"><span class="lbl">Wages</span><b id="stWages">0</b></div>
+      <div class="stat"><span class="lbl">Reimb.</span><b id="stReimb">0</b></div>
     </div>
     <div class="strip" id="strip" aria-label="Jump to day"></div>
   </section>
+
   <button class="notice" id="setupNotice" type="button" hidden>
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="color:var(--accent-text);flex:none"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
-    <span>Add <b>your name</b> in Settings so it appears on the timesheet you send.</span>
+    <span aria-hidden="true" style="font-size:20px">👤</span>
+    <span class="grow">Add <b>your name</b> in Settings so it appears on the timesheet you send.</span>
   </button>
+
+  <section class="panel" id="reimbPanel" aria-labelledby="reimbHeading">
+    <div class="panel-head">
+      <h2 id="reimbHeading">🧾 Reimbursements</h2>
+      <button class="pill-btn" id="addReimbBtn" type="button">+ Add</button>
+    </div>
+    <div class="rlist" id="reimbList"></div>
+    <div class="r-foot" id="reimbFoot" hidden><span>Total reimbursements</span><b id="reimbTotal">0</b></div>
+  </section>
+
+  <h2 class="section-title">📅 Days</h2>
   <ol class="days" id="days" aria-label="Days in period"></ol>
 </main>
 
@@ -499,7 +630,7 @@ body.typing .bar { transform: translateY(110%); }
     </div>
     <div class="total">
       <div class="lbl"><span aria-hidden="true">💵</span> Total cash</div>
-      <div class="val" id="totAmount">$0.00</div>
+      <div class="val" id="totAmount">0</div>
       <div class="tsub" id="totSub">0 days worked</div>
     </div>
     <button class="send-btn" id="sendBtn" type="button" aria-label="Send timesheet">
@@ -509,7 +640,82 @@ body.typing .bar { transform: translateY(110%); }
   </div>
 </footer>
 
-<!-- Settings sheet -->
+<!-- Welcome (first run) -->
+<div class="overlay" id="welcomeOverlay" aria-hidden="true">
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle">
+    <div class="grabber" aria-hidden="true"></div>
+    <div class="welcome-hero">
+      <div class="big" aria-hidden="true">👋</div>
+      <h2 id="welcomeTitle">Welcome to Timesheet</h2>
+      <p>Track hours, pay and reimbursements. No account, no sign-up.</p>
+    </div>
+    <div class="perks">
+      <div><span aria-hidden="true">⏱️</span>Hours &amp; pay</div>
+      <div><span aria-hidden="true">🧾</span>Reimbursements</div>
+      <div><span aria-hidden="true">🔒</span>Stays on your phone</div>
+    </div>
+    <label class="field">
+      <span class="flabel">Your name</span>
+      <input id="wName" type="text" autocomplete="name" autocapitalize="words" placeholder="Full name" enterkeyhint="next">
+    </label>
+    <div class="two">
+      <label class="field">
+        <span class="flabel">Hourly rate</span>
+        <input id="wRate" type="text" inputmode="decimal" autocomplete="off" placeholder="0.00">
+      </label>
+      <label class="field">
+        <span class="flabel">Currency</span>
+        <select id="wCurrency"></select>
+      </label>
+    </div>
+    <label class="field">
+      <span class="flabel">Pay period</span>
+      <select id="wPeriod"></select>
+    </label>
+    <div class="sheet-actions single">
+      <button class="btn-primary" id="wStart" type="button">Get started</button>
+    </div>
+    <p class="hint" style="margin:-6px 0 0;text-align:center">You can change all of this later in Settings ⚙️</p>
+  </div>
+</div>
+
+<!-- Reimbursement editor -->
+<div class="overlay" id="reimbOverlay" aria-hidden="true">
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="reimbTitle">
+    <div class="grabber" aria-hidden="true"></div>
+    <div class="sheet-head">
+      <h2 id="reimbTitle">Add reimbursement</h2>
+      <button class="done-btn" type="button" data-close>Cancel</button>
+    </div>
+    <div>
+      <span class="flabel">Type</span>
+      <div class="cat-grid" id="rCatGrid" role="group" aria-label="Reimbursement type"></div>
+    </div>
+    <div class="new-cat" id="rNewCat" hidden>
+      <input class="emo-in" id="rNewEmoji" type="text" placeholder="🙂" aria-label="Emoji for new type" autocomplete="off">
+      <input id="rNewName" type="text" placeholder="New type, e.g. Train" aria-label="Name of new type" autocapitalize="words" autocomplete="off" enterkeyhint="done">
+      <button id="rNewAdd" type="button">Add</button>
+    </div>
+    <div>
+      <span class="flabel">Amount</span>
+      <label class="amt-big"><span id="rCur">$</span><input id="rAmount" type="text" inputmode="decimal" autocomplete="off" placeholder="0.00" aria-label="Amount"></label>
+    </div>
+    <label class="field">
+      <span class="flabel">Date</span>
+      <select id="rDate"></select>
+    </label>
+    <label class="field">
+      <span class="flabel">Note (optional)</span>
+      <input id="rDesc" type="text" placeholder="e.g. Airport to site" autocomplete="off" autocapitalize="sentences" enterkeyhint="done">
+    </label>
+    <div class="sheet-actions" id="rActions">
+      <button class="btn-danger" id="rDelete" type="button">Delete</button>
+      <button class="btn-primary" id="rSave" type="button">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Settings -->
 <div class="overlay" id="settingsOverlay" aria-hidden="true">
   <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
     <div class="grabber" aria-hidden="true"></div>
@@ -517,23 +723,58 @@ body.typing .bar { transform: translateY(110%); }
       <h2 id="settingsTitle">Settings</h2>
       <button class="done-btn" type="button" data-close>Done</button>
     </div>
+
+    <h3 class="sec-title">👤 Profile</h3>
     <label class="field">
       <span class="flabel">Your name</span>
       <input id="setName" type="text" autocomplete="name" autocapitalize="words" placeholder="Full name" enterkeyhint="done">
     </label>
+    <div class="two">
+      <label class="field">
+        <span class="flabel">Default rate</span>
+        <input id="setRate" type="text" inputmode="decimal" autocomplete="off" placeholder="0.00">
+      </label>
+      <label class="field">
+        <span class="flabel">Currency</span>
+        <select id="setCurrency"></select>
+      </label>
+    </div>
+    <p class="hint">The default rate is used for new periods. Each period remembers its own rate.</p>
+
+    <h3 class="sec-title">📅 Pay period</h3>
     <label class="field">
-      <span class="flabel">Default hourly rate ($)</span>
-      <input id="setRate" type="text" inputmode="decimal" autocomplete="off" placeholder="0.00">
+      <span class="flabel">Period type</span>
+      <select id="setPeriod"></select>
     </label>
-    <p class="hint">Used for new periods. Each period remembers its own rate.</p>
+    <label class="field" id="weekStartField" hidden>
+      <span class="flabel">Week starts on</span>
+      <select id="setWeekStart">
+        <option value="1">Monday</option>
+        <option value="0">Sunday</option>
+      </select>
+    </label>
+    <label class="field" id="biweekField" hidden>
+      <span class="flabel">Current pay period started</span>
+      <select id="setBiweek"></select>
+    </label>
+
+    <h3 class="sec-title">🧾 Reimbursement types</h3>
+    <div class="group cat-list" id="catList"></div>
+    <div class="new-cat">
+      <input class="emo-in" id="catEmoji" type="text" placeholder="🙂" aria-label="Emoji for new type" autocomplete="off">
+      <input id="catName" type="text" placeholder="Add a type, e.g. Train" aria-label="Name of new type" autocapitalize="words" autocomplete="off" enterkeyhint="done">
+      <button id="catAddBtn" type="button">Add</button>
+    </div>
+    <p class="hint">Keep the types you use, remove the rest. <button class="link-btn" id="catReset" type="button" style="height:auto;padding:0">Restore defaults</button></p>
+
+    <h3 class="sec-title">⚙️ Display</h3>
     <div>
-      <span class="flabel">Time display</span>
+      <span class="flabel">Time format</span>
       <div class="seg" id="clockSeg">
         <button type="button" class="seg-btn" data-clock="12h">12-hour</button>
         <button type="button" class="seg-btn" data-clock="24h">24-hour</button>
       </div>
     </div>
-    <p class="hint">12-hour entry uses an AM/PM button; 24-hour entry uses 0–23 (e.g. 17:30).</p>
     <div>
       <span class="flabel">Appearance</span>
       <div class="seg seg3" id="themeSeg">
@@ -542,24 +783,35 @@ body.typing .bar { transform: translateY(110%); }
         <button type="button" class="seg-btn" data-theme-v="dark">Dark</button>
       </div>
     </div>
-    <div>
-      <span class="flabel">Data</span>
-      <div class="group">
-        <button class="row-btn" type="button" id="exportBtn">Export backup
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></svg>
-        </button>
-        <button class="row-btn" type="button" id="importBtn">Import backup
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5"/><path d="M12 3v12"/></svg>
-        </button>
-        <button class="row-btn danger" type="button" id="clearPeriodBtn">Clear this period</button>
-      </div>
-      <input type="file" id="importFile" accept="application/json,.json" hidden>
+
+    <h3 class="sec-title">💾 Data</h3>
+    <div class="group">
+      <button class="row-btn" type="button" id="exportBtn">Export backup
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></svg>
+      </button>
+      <button class="row-btn" type="button" id="importBtn">Import backup
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5"/><path d="M12 3v12"/></svg>
+      </button>
+      <button class="row-btn danger" type="button" id="clearPeriodBtn">Clear this period</button>
     </div>
-    <p class="hint" id="storageNote" style="margin-top:-4px">All data is stored privately on this device.</p>
+    <input type="file" id="importFile" accept="application/json,.json" hidden>
+    <p class="hint" id="storageNote" style="margin-top:-6px">All data is stored privately on this device.</p>
+
+    <h3 class="sec-title">📣 Community</h3>
+    <div class="group">
+      <button class="row-btn" type="button" id="shareAppBtn">Share this app with others
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 8 5-5 5 5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>
+      </button>
+      <a class="row-btn" id="repoLink" href="#" target="_blank" rel="noopener">Source code &amp; feedback
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7"/><path d="M7 7h10v10"/></svg>
+      </a>
+      <div class="row-btn" style="cursor:default">Version <span class="meta" id="versionLabel"></span></div>
+    </div>
+    <p class="hint" style="margin-top:-6px">Free to use. No logins, no tracking — each person's data stays on their own phone.</p>
   </div>
 </div>
 
-<!-- Share sheet (used when the system share sheet isn't available) -->
+<!-- Share sheet -->
 <div class="overlay" id="shareOverlay" aria-hidden="true">
   <div class="sheet share-sheet" role="dialog" aria-modal="true" aria-labelledby="shareTitle">
     <div class="grabber" aria-hidden="true"></div>
@@ -572,38 +824,38 @@ body.typing .bar { transform: translateY(110%); }
       <button class="ss-close" type="button" data-close aria-label="Close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
     </div>
     <div class="seg" id="shareMode" role="group" aria-label="What to share">
-      <button type="button" class="seg-btn" data-mode="message" aria-pressed="true">Message</button>
-      <button type="button" class="seg-btn" data-mode="page" aria-pressed="false">Page</button>
+      <button type="button" class="seg-btn" data-mode="message" aria-pressed="true">💬 Message</button>
+      <button type="button" class="seg-btn" data-mode="page" aria-pressed="false">📄 Page</button>
     </div>
     <div class="share-panel" id="panelMessage">
-    <div class="ss-apps">
-      <a class="ss-app" id="shareWhatsApp" href="#" target="_blank" rel="noopener">
-        <span class="app-ic ic-wa" aria-hidden="true"><svg width="34" height="34" viewBox="0 0 24 24" fill="#fff"><path d="M17.47 14.38c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.16-.17.2-.35.22-.64.07-.3-.15-1.26-.46-2.39-1.47-.88-.79-1.48-1.76-1.65-2.06-.17-.3-.02-.46.13-.6.13-.14.3-.35.45-.52.15-.18.2-.3.3-.5.1-.2.05-.37-.03-.52-.07-.15-.67-1.61-.91-2.2-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.79.37-.27.3-1.04 1.02-1.04 2.48s1.06 2.88 1.21 3.07c.15.2 2.1 3.2 5.08 4.49.71.31 1.26.49 1.7.63.71.22 1.36.19 1.87.12.57-.09 1.76-.72 2-1.41.25-.7.25-1.29.18-1.41-.08-.13-.27-.2-.57-.35zM12.05 21.79h-.01a9.87 9.87 0 0 1-5.03-1.38l-.36-.21-3.74.98 1-3.65-.24-.37a9.86 9.86 0 0 1-1.51-5.26c0-5.45 4.44-9.88 9.89-9.88 2.64 0 5.12 1.03 6.99 2.9a9.83 9.83 0 0 1 2.89 6.99c0 5.45-4.44 9.88-9.89 9.88zm8.41-18.3A11.82 11.82 0 0 0 12.05 0C5.5 0 .16 5.34.16 11.89c0 2.1.55 4.14 1.59 5.95L.06 24l6.3-1.65a11.88 11.88 0 0 0 5.68 1.45h.01c6.55 0 11.89-5.34 11.89-11.89 0-3.18-1.24-6.16-3.48-8.41z"/></svg></span>
-        WhatsApp
-      </a>
-      <a class="ss-app" id="shareSMS" href="#" target="_blank" rel="noopener">
-        <span class="app-ic ic-msg" aria-hidden="true"><svg width="36" height="36" viewBox="0 0 24 24" fill="#fff"><path d="M12 3.2c-5.4 0-9.8 3.7-9.8 8.3 0 2.5 1.3 4.8 3.4 6.3-.15 1.25-.7 2.4-1.5 3.3 1.95-.05 3.65-.7 4.9-1.65 1 .28 1.95.4 3 .4 5.4 0 9.8-3.7 9.8-8.3S17.4 3.2 12 3.2z"/></svg></span>
-        Messages
-      </a>
-      <a class="ss-app" id="shareEmail" href="#" target="_blank" rel="noopener">
-        <span class="app-ic ic-mail" aria-hidden="true"><svg width="38" height="38" viewBox="0 0 24 24"><rect x="2.5" y="5.5" width="19" height="13" rx="2.2" fill="#fff"/><path d="M3.4 6.6 12 13l8.6-6.4" fill="none" stroke="#2C8BF7" stroke-width="1.4" stroke-linejoin="round"/></svg></span>
-        Mail
-      </a>
-      <button class="ss-app" id="shareMore" type="button" hidden>
-        <span class="app-ic ic-more" aria-hidden="true"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 8 5-5 5 5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg></span>
-        More
-      </button>
-    </div>
-    <div class="ss-actions">
-      <button class="ss-row" id="shareCopy" type="button">
-        Copy
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-      </button>
-    </div>
-    <details class="ss-preview">
-      <summary>Preview message</summary>
-      <pre class="preview" id="sharePreview"></pre>
-    </details>
+      <div class="ss-apps">
+        <a class="ss-app" id="shareWhatsApp" href="#" target="_blank" rel="noopener">
+          <span class="app-ic ic-wa" aria-hidden="true"><svg width="34" height="34" viewBox="0 0 24 24" fill="#fff"><path d="M17.47 14.38c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.16-.17.2-.35.22-.64.07-.3-.15-1.26-.46-2.39-1.47-.88-.79-1.48-1.76-1.65-2.06-.17-.3-.02-.46.13-.6.13-.14.3-.35.45-.52.15-.18.2-.3.3-.5.1-.2.05-.37-.03-.52-.07-.15-.67-1.61-.91-2.2-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.79.37-.27.3-1.04 1.02-1.04 2.48s1.06 2.88 1.21 3.07c.15.2 2.1 3.2 5.08 4.49.71.31 1.26.49 1.7.63.71.22 1.36.19 1.87.12.57-.09 1.76-.72 2-1.41.25-.7.25-1.29.18-1.41-.08-.13-.27-.2-.57-.35zM12.05 21.79h-.01a9.87 9.87 0 0 1-5.03-1.38l-.36-.21-3.74.98 1-3.65-.24-.37a9.86 9.86 0 0 1-1.51-5.26c0-5.45 4.44-9.88 9.89-9.88 2.64 0 5.12 1.03 6.99 2.9a9.83 9.83 0 0 1 2.89 6.99c0 5.45-4.44 9.88-9.89 9.88zm8.41-18.3A11.82 11.82 0 0 0 12.05 0C5.5 0 .16 5.34.16 11.89c0 2.1.55 4.14 1.59 5.95L.06 24l6.3-1.65a11.88 11.88 0 0 0 5.68 1.45h.01c6.55 0 11.89-5.34 11.89-11.89 0-3.18-1.24-6.16-3.48-8.41z"/></svg></span>
+          WhatsApp
+        </a>
+        <a class="ss-app" id="shareSMS" href="#" target="_blank" rel="noopener">
+          <span class="app-ic ic-msg" aria-hidden="true"><svg width="36" height="36" viewBox="0 0 24 24" fill="#fff"><path d="M12 3.2c-5.4 0-9.8 3.7-9.8 8.3 0 2.5 1.3 4.8 3.4 6.3-.15 1.25-.7 2.4-1.5 3.3 1.95-.05 3.65-.7 4.9-1.65 1 .28 1.95.4 3 .4 5.4 0 9.8-3.7 9.8-8.3S17.4 3.2 12 3.2z"/></svg></span>
+          Messages
+        </a>
+        <a class="ss-app" id="shareEmail" href="#" target="_blank" rel="noopener">
+          <span class="app-ic ic-mail" aria-hidden="true"><svg width="38" height="38" viewBox="0 0 24 24"><rect x="2.5" y="5.5" width="19" height="13" rx="2.2" fill="#fff"/><path d="M3.4 6.6 12 13l8.6-6.4" fill="none" stroke="#2C8BF7" stroke-width="1.4" stroke-linejoin="round"/></svg></span>
+          Mail
+        </a>
+        <button class="ss-app" id="shareMore" type="button" hidden>
+          <span class="app-ic ic-more" aria-hidden="true"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 8 5-5 5 5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg></span>
+          More
+        </button>
+      </div>
+      <div class="ss-actions">
+        <button class="ss-row" id="shareCopy" type="button">
+          Copy
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        </button>
+      </div>
+      <details class="ss-preview">
+        <summary>Preview message</summary>
+        <pre class="preview" id="sharePreview"></pre>
+      </details>
     </div>
     <div class="share-panel" id="panelPage" hidden>
       <div class="page-preview" id="pagePreview"><div class="page-loading">Preparing page…</div></div>
@@ -622,33 +874,62 @@ body.typing .bar { transform: translateY(110%); }
   </div>
 </div>
 
-<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"><span id="toastMsg"></span><button type="button" id="toastUndo" hidden>Undo</button></div>
 
 <script>
 (() => {
   'use strict';
 
+  /* ---------- App info ---------- */
+  const APP_VERSION = '2.0.0';
+  const APP_URL = 'https://gopalkolipaka2024-ops.github.io/Time_Sheet/';
+  const REPO_URL = 'https://github.com/gopalkolipaka2024-ops/Time_Sheet';
+
   /* ---------- Constants & helpers ---------- */
   const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   const DAY_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
   const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  const REIMB_TYPES = ['Cab', 'Meals', 'Parking', 'Fuel', 'Tolls', 'Supplies', 'Other'];
   const TIME_FIELDS = ['sh', 'sm', 'eh', 'em'];
+  const BREAKS = [['0', 'None'], ['15', '15m'], ['30', '30m'], ['45', '45m'], ['60', '1h']];
+  const DEFAULT_CATEGORIES = [
+    { id: 'cab', emoji: '🚕', name: 'Cab' },
+    { id: 'meals', emoji: '🍔', name: 'Meals' },
+    { id: 'parking', emoji: '🅿️', name: 'Parking' },
+    { id: 'fuel', emoji: '⛽', name: 'Fuel' },
+    { id: 'tolls', emoji: '🛣️', name: 'Tolls' },
+    { id: 'supplies', emoji: '🧰', name: 'Supplies' },
+    { id: 'other', emoji: '📦', name: 'Other' }
+  ];
+  const CURRENCIES = [
+    ['USD', 'US Dollar'], ['CAD', 'Canadian Dollar'], ['EUR', 'Euro'], ['GBP', 'British Pound'],
+    ['INR', 'Indian Rupee'], ['AUD', 'Australian Dollar'], ['NZD', 'New Zealand Dollar'], ['MXN', 'Mexican Peso'],
+    ['PHP', 'Philippine Peso'], ['AED', 'UAE Dirham'], ['SGD', 'Singapore Dollar'], ['ZAR', 'South African Rand'],
+    ['NGN', 'Nigerian Naira'], ['PKR', 'Pakistani Rupee'], ['BRL', 'Brazilian Real'], ['JPY', 'Japanese Yen']
+  ];
+  const PERIOD_TYPES = [
+    ['half', 'Half-monthly (1–15, 16–end)'],
+    ['week', 'Weekly'],
+    ['biweek', 'Bi-weekly (every 2 weeks)'],
+    ['month', 'Monthly']
+  ];
 
   const $ = (sel, root = document) => root.querySelector(sel);
   const pad2 = n => String(n).padStart(2, '0');
   const iso = (y, m, d) => `${y}-${pad2(m + 1)}-${pad2(d)}`;
   const parseISO = s => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
-  const todayISO = () => { const t = new Date(); return iso(t.getFullYear(), t.getMonth(), t.getDate()); };
+  const toISO = dt => iso(dt.getFullYear(), dt.getMonth(), dt.getDate());
+  const todayISO = () => toISO(new Date());
+  const addDays = (s, n) => { const d = parseISO(s); d.setDate(d.getDate() + n); return toISO(d); };
+  const dayDiff = (a, b) => { const [ay, am, ad] = a.split('-').map(Number); const [by, bm, bd] = b.split('-').map(Number); return Math.round((Date.UTC(ay, am - 1, ad) - Date.UTC(by, bm - 1, bd)) / 864e5); };
+  const shortDate = s => { const d = parseISO(s); return `${DAY_SHORT[d.getDay()]}, ${MONTHS[d.getMonth()]} ${d.getDate()}`; };
   const round2 = n => Math.round((n + Number.EPSILON) * 100) / 100;
   const clone = o => JSON.parse(JSON.stringify(o));
   const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  const money = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' });
-  const fmt$ = n => money.format(n || 0);
   const fmtH = h => round2(h).toFixed(2);
   const fmtDur = mins => `${Math.floor(mins / 60)}h ${pad2(mins % 60)}m`;
   const num = v => { const n = parseFloat(v); return Number.isFinite(n) ? n : 0; };
+  const oneLine = s => String(s).trim().replace(/\s*\n+\s*/g, '; ');
 
   function cleanDecimal(s) {
     s = String(s).replace(/,/g, '.').replace(/[^\d.]/g, '');
@@ -656,33 +937,30 @@ body.typing .bar { transform: translateY(110%); }
     if (i >= 0) s = s.slice(0, i + 1) + s.slice(i + 1).replace(/\./g, '').slice(0, 2);
     return s.slice(0, 10);
   }
-
-  /* ---------- Periods (1–15, 16–end of month) ---------- */
-  const daysInMonth = (y, m) => new Date(y, m + 1, 0).getDate();
-  function periodOf(dateStr) {
-    const d = parseISO(dateStr);
-    return { y: d.getFullYear(), m: d.getMonth(), half: d.getDate() <= 15 ? 1 : 2 };
-  }
-  const periodId = p => `${p.y}-${pad2(p.m + 1)}-${p.half}`;
-  const periodIdOfDate = date => `${date.slice(0, 7)}-${Number(date.slice(8, 10)) <= 15 ? 1 : 2}`;
-  const periodStart = p => (p.half === 1 ? 1 : 16);
-  const periodEnd = p => (p.half === 1 ? 15 : daysInMonth(p.y, p.m));
-  function periodDates(p) {
-    const out = [];
-    for (let d = periodStart(p); d <= periodEnd(p); d++) out.push(iso(p.y, p.m, d));
-    return out;
-  }
-  function shiftPeriod(p, dir) {
-    let { y, m, half } = p;
-    if (dir > 0) {
-      if (half === 1) half = 2; else { half = 1; m++; if (m > 11) { m = 0; y++; } }
-    } else {
-      if (half === 2) half = 1; else { half = 2; m--; if (m < 0) { m = 11; y--; } }
+  // First visible character (emoji may be several code points).
+  function firstGrapheme(s) {
+    s = String(s || '').trim();
+    if (!s) return '';
+    if (window.Intl && Intl.Segmenter) {
+      for (const { segment } of new Intl.Segmenter(undefined, { granularity: 'grapheme' }).segment(s)) return segment;
     }
-    return { y, m, half };
+    return Array.from(s).slice(0, 2).join('');
   }
-  const periodLabel = p => `${MONTHS[p.m]} ${periodStart(p)} – ${periodEnd(p)}, ${p.y}`;
-  const samePeriod = (a, b) => a.y === b.y && a.m === b.m && a.half === b.half;
+
+  /* ---------- Money ---------- */
+  let money = null;
+  let curSymbol = '$';
+  function setMoney(code) {
+    const locale = (navigator.languages && navigator.languages[0]) || navigator.language || 'en-US';
+    const make = (loc, extra) => new Intl.NumberFormat(loc, Object.assign({ style: 'currency', currency: code }, extra));
+    try { money = make(locale, { currencyDisplay: 'narrowSymbol' }); }
+    catch (e) {
+      try { money = make('en-US', {}); } catch (e2) { code = 'USD'; money = make('en-US', {}); }
+    }
+    const part = money.formatToParts(0).find(p => p.type === 'currency');
+    curSymbol = part ? part.value : '$';
+  }
+  const fmt$ = n => money.format(n || 0);
 
   /* ---------- Storage (IndexedDB, localStorage fallback) ---------- */
   const Store = (() => {
@@ -775,47 +1053,128 @@ body.typing .bar { transform: translateY(110%); }
   })();
 
   /* ---------- State ---------- */
-  const DEFAULT_SETTINGS = { name: '', rate: '', theme: 'system', clock: '12h', lastTimes: null, periodRates: {} };
+  const DEFAULT_SETTINGS = {
+    name: '', rate: '', theme: 'system', clock: '12h', lastTimes: null, periodRates: {},
+    currency: 'USD', periodType: 'half', weekStart: 1, biweekShift: 0,
+    categories: DEFAULT_CATEGORIES, onboarded: false, installHintDismissed: false
+  };
   const state = {
     settings: clone(DEFAULT_SETTINGS),
     days: {},
-    period: periodOf(todayISO()),
+    period: null,
     open: null
   };
+
+  /* ---------- Pay periods ---------- */
+  const daysInMonth = (y, m) => new Date(y, m + 1, 0).getDate();
+  // A period is { type, start, end } with ISO dates (inclusive).
+  function periodOf(dateStr, type = state.settings.periodType) {
+    const d = parseISO(dateStr);
+    const y = d.getFullYear(), m = d.getMonth(), day = d.getDate();
+    if (type === 'month') return { type, start: iso(y, m, 1), end: iso(y, m, daysInMonth(y, m)) };
+    if (type === 'week' || type === 'biweek') {
+      const ws = Number(state.settings.weekStart) === 0 ? 0 : 1;
+      let start = addDays(dateStr, -((d.getDay() - ws + 7) % 7));
+      if (type === 'week') return { type, start, end: addDays(start, 6) };
+      // Bi-weekly: fixed reference week; biweekShift picks which alternate week the cycle starts on.
+      const anchor = addDays(ws === 1 ? '2024-01-01' : '2023-12-31', state.settings.biweekShift ? 7 : 0);
+      const weeks = Math.floor(dayDiff(start, anchor) / 7);
+      if (((weeks % 2) + 2) % 2 === 1) start = addDays(start, -7);
+      return { type, start, end: addDays(start, 13) };
+    }
+    return day <= 15
+      ? { type: 'half', start: iso(y, m, 1), end: iso(y, m, 15) }
+      : { type: 'half', start: iso(y, m, 16), end: iso(y, m, daysInMonth(y, m)) };
+  }
+  // Half-monthly ids keep the original "YYYY-MM-1|2" format so saved rates carry over.
+  const periodId = p => (p.type === 'half'
+    ? `${p.start.slice(0, 7)}-${p.start.slice(8) === '01' ? 1 : 2}`
+    : `${p.type}:${p.start}`);
+  const periodIdOfDate = date => periodId(periodOf(date));
+  function periodDates(p) {
+    const out = [];
+    for (let s = p.start; s <= p.end; s = addDays(s, 1)) out.push(s);
+    return out;
+  }
+  const shiftPeriod = (p, dir) => periodOf(dir > 0 ? addDays(p.end, 1) : addDays(p.start, -1), p.type);
+  const samePeriod = (a, b) => a.type === b.type && a.start === b.start;
+  function periodLabel(p) {
+    const s = parseISO(p.start), e = parseISO(p.end);
+    if (s.getFullYear() !== e.getFullYear()) return `${MONTHS[s.getMonth()]} ${s.getDate()}, ${s.getFullYear()} – ${MONTHS[e.getMonth()]} ${e.getDate()}, ${e.getFullYear()}`;
+    if (s.getMonth() !== e.getMonth()) return `${MONTHS[s.getMonth()]} ${s.getDate()} – ${MONTHS[e.getMonth()]} ${e.getDate()}, ${e.getFullYear()}`;
+    return `${MONTHS[s.getMonth()]} ${s.getDate()} – ${e.getDate()}, ${e.getFullYear()}`;
+  }
+  function periodKind(p) {
+    if (p.type === 'half') return p.start.slice(8) === '01' ? '1st half' : '2nd half';
+    return { week: 'Weekly', biweek: 'Bi-weekly', month: 'Monthly' }[p.type];
+  }
+  const periodSub = p => `${periodKind(p)} · ${periodDates(p).length} days`;
+
+  /* ---------- Normalisation (load / import) ---------- */
+  function normalizeCategories(list) {
+    if (!Array.isArray(list)) return clone(DEFAULT_CATEGORIES);
+    const seen = new Set();
+    const out = list.filter(c => c && typeof c === 'object').map(c => ({
+      id: String(c.id || uid()).slice(0, 40),
+      emoji: firstGrapheme(c.emoji) || '🧾',
+      name: String(c.name || '').trim().slice(0, 40) || 'Other'
+    })).filter(c => !seen.has(c.id) && seen.add(c.id));
+    return out.length ? out : clone(DEFAULT_CATEGORIES);
+  }
 
   function normalizeDay(raw) {
     if (!raw || typeof raw !== 'object' || !/^\d{4}-\d{2}-\d{2}$/.test(raw.date)) return null;
     const str = (v, max = 2000) => (typeof v === 'string' ? v.slice(0, max) : (typeof v === 'number' ? String(v) : ''));
     const two = v => str(v).replace(/\D/g, '').slice(0, 2);
+    const cats = state.settings.categories;
+    const brk = Math.min(600, Math.max(0, Math.round(num(raw.brk))));
     const d = {
       date: raw.date,
       status: raw.status === 'worked' || raw.status === 'off' ? raw.status : undefined,
       sh: two(raw.sh), sm: two(raw.sm), eh: two(raw.eh), em: two(raw.em),
       sap: raw.sap === 'AM' || raw.sap === 'PM' ? raw.sap : undefined,
       eap: raw.eap === 'AM' || raw.eap === 'PM' ? raw.eap : undefined,
+      brk: brk ? String(brk) : undefined,
       site: str(raw.site, 300),
       notes: str(raw.notes),
-      reimb: Array.isArray(raw.reimb) ? raw.reimb.filter(r => r && typeof r === 'object').map(r => ({
-        id: str(r.id, 40) || uid(),
-        type: REIMB_TYPES.includes(r.type) ? r.type : 'Other',
-        amount: cleanDecimal(str(r.amount, 20)),
-        desc: str(r.desc, 300)
-      })) : []
+      reimb: Array.isArray(raw.reimb) ? raw.reimb.filter(r => r && typeof r === 'object').map(r => {
+        const type = str(r.type, 40) || 'Other';
+        // Older backups stored only the type name: link it to a matching category.
+        const match = cats.find(c => c.id === r.cat) || cats.find(c => c.name.toLowerCase() === type.toLowerCase());
+        return {
+          id: str(r.id, 40) || uid(),
+          cat: match ? match.id : '',
+          type: match ? match.name : type,
+          emoji: match ? match.emoji : (firstGrapheme(str(r.emoji, 16)) || '🧾'),
+          amount: cleanDecimal(str(r.amount, 20)),
+          desc: str(r.desc, 300)
+        };
+      }) : []
     };
-    ['status', 'sap', 'eap'].forEach(k => { if (!d[k]) delete d[k]; });
+    ['status', 'sap', 'eap', 'brk'].forEach(k => { if (!d[k]) delete d[k]; });
     return d;
   }
+
   function normalizeSettings(raw) {
     const s = Object.assign(clone(DEFAULT_SETTINGS), raw && typeof raw === 'object' ? raw : {});
     s.name = typeof s.name === 'string' ? s.name.slice(0, 120) : '';
     s.rate = cleanDecimal(s.rate == null ? '' : s.rate);
     if (!['system', 'light', 'dark'].includes(s.theme)) s.theme = 'system';
     if (!['12h', '24h'].includes(s.clock)) s.clock = '12h';
+    if (!CURRENCIES.some(([c]) => c === s.currency)) s.currency = 'USD';
+    if (!PERIOD_TYPES.some(([t]) => t === s.periodType)) s.periodType = 'half';
+    s.weekStart = Number(s.weekStart) === 0 ? 0 : 1;
+    s.biweekShift = s.biweekShift ? 1 : 0;
+    s.onboarded = !!s.onboarded;
+    s.installHintDismissed = !!s.installHintDismissed;
+    s.categories = normalizeCategories(s.categories);
     if (!s.periodRates || typeof s.periodRates !== 'object') s.periodRates = {};
     for (const k of Object.keys(s.periodRates)) s.periodRates[k] = cleanDecimal(s.periodRates[k]);
     if (s.lastTimes && typeof s.lastTimes === 'object') {
       const lt = {};
       TIME_FIELDS.forEach(f => { lt[f] = String(s.lastTimes[f] || '').replace(/\D/g, '').slice(0, 2); });
+      const b = Math.round(num(s.lastTimes.brk));
+      if (b > 0) lt.brk = String(Math.min(600, b));
       s.lastTimes = lt;
     } else s.lastTimes = null;
     return s;
@@ -836,6 +1195,13 @@ body.typing .bar { transform: translateY(110%); }
   }
   const getRate = pid => Math.max(0, num(rateString(pid)));
 
+  const catById = id => state.settings.categories.find(c => c.id === id);
+  // Current emoji/name for an item: follows its category (so renames apply), else the saved snapshot.
+  function catInfo(r) {
+    const c = r.cat && catById(r.cat);
+    return c ? { emoji: c.emoji, name: c.name } : { emoji: r.emoji || '🧾', name: r.type || 'Other' };
+  }
+
   /* ---------- Calculations ---------- */
   function toMin(h, m) {
     if (h === '' || h == null) return null;
@@ -848,9 +1214,10 @@ body.typing .bar { transform: translateY(110%); }
     if (!d) return null;
     const s = toMin(d.sh, d.sm), e = toMin(d.eh, d.em);
     if (s == null || e == null) return null;
-    let mins = e - s;
-    if (mins < 0) mins += 1440;
-    return { s, e, mins, overnight: e < s };
+    let gross = e - s;
+    if (gross < 0) gross += 1440;
+    const brk = Math.min(gross, Math.max(0, Math.round(num(d.brk))));
+    return { s, e, gross, brk, mins: gross - brk, overnight: e < s };
   }
   const dayMinutes = d => (d && d.status === 'worked' ? (shift(d) || { mins: 0 }).mins : 0);
   const dayPay = d => round2(dayMinutes(d) / 60 * getRate(periodIdOfDate(d.date)));
@@ -862,6 +1229,7 @@ body.typing .bar { transform: translateY(110%); }
     return `${H % 12 || 12}:${pad2(M)} ${H < 12 ? 'AM' : 'PM'}`;
   }
   const fmtRange = d => `${fmtTime(d.sh, d.sm)} – ${fmtTime(d.eh, d.em)}`;
+  const fmtBreak = m => (m >= 60 && m % 60 === 0 ? `${m / 60}h` : `${m}m`);
 
   // AM/PM for the start ('s') or end ('e') time: derived from the stored 24h hour when set,
   // otherwise the meridiem the user picked (defaults: start AM, end PM).
@@ -875,6 +1243,7 @@ body.typing .bar { transform: translateY(110%); }
   function rememberTimes(d) {
     if (!shift(d)) return;
     state.settings.lastTimes = { sh: d.sh, sm: d.sm || '00', eh: d.eh, em: d.em || '00' };
+    if (d.brk) state.settings.lastTimes.brk = d.brk;
     markSettings();
   }
 
@@ -893,6 +1262,14 @@ body.typing .bar { transform: translateY(110%); }
     t.hours = t.mins / 60;
     t.total = round2(t.wages + t.reimb);
     return t;
+  }
+  function periodReimbItems(p = state.period) {
+    const out = [];
+    periodDates(p).forEach(date => {
+      const d = getDay(date);
+      if (d && d.reimb) d.reimb.forEach(r => out.push({ date, r }));
+    });
+    return out;
   }
 
   /* ---------- Persistence scheduling ---------- */
@@ -935,6 +1312,14 @@ body.typing .bar { transform: translateY(110%); }
     }
   }
 
+  /* ---------- Environment ---------- */
+  const isFramed = (() => { try { return window.self !== window.top; } catch (e) { return true; } })();
+  const isHosted = /^https?:$/.test(location.protocol) && !isFramed;
+  const isStandalone = window.navigator.standalone === true ||
+    (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const appLink = () => (isHosted && !/^(localhost|127\.)/.test(location.hostname) ? location.origin + location.pathname : APP_URL);
+
   /* ---------- Theme & icon ---------- */
   function applyTheme() {
     const root = document.documentElement;
@@ -946,7 +1331,9 @@ body.typing .bar { transform: translateY(110%); }
     document.querySelectorAll('#themeSeg [data-theme-v]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.themeV === state.settings.theme)));
   }
 
+  // The hosted app ships icon files; a standalone copy of this file draws its own.
   function makeTouchIcon() {
+    if (isHosted) return;
     try {
       const c = document.createElement('canvas');
       c.width = c.height = 180;
@@ -962,31 +1349,43 @@ body.typing .bar { transform: translateY(110%); }
     } catch (e) { /* non-critical */ }
   }
 
-  /* ---------- Toast ---------- */
+  /* ---------- Toast (with optional Undo) ---------- */
   let toastTimer = null;
-  function toast(msg) {
+  let toastUndo = null;
+  function toast(msg, opts = {}) {
     const el = $('#toast');
-    el.textContent = msg;
+    $('#toastMsg').textContent = msg;
+    toastUndo = opts.undo || null;
+    $('#toastUndo').hidden = !toastUndo;
+    el.classList.toggle('has-action', !!toastUndo);
     el.classList.add('show');
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
+    toastTimer = setTimeout(hideToast, toastUndo ? 5000 : 2200);
   }
+  function hideToast() {
+    $('#toast').classList.remove('show', 'has-action');
+    toastUndo = null;
+  }
+  $('#toastUndo').addEventListener('click', () => {
+    const fn = toastUndo;
+    hideToast();
+    if (fn) fn();
+  });
 
   /* ---------- Rendering ---------- */
   const daysEl = $('#days');
   const cardEl = date => daysEl.querySelector(`.card[data-date="${date}"]`);
 
   const CHEVRON = '<svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>';
-  const X_ICON = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>';
+  const TRASH = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>';
 
   function renderHeader() {
     const p = state.period;
-    const t = periodTotals(p);
-    const dates = periodDates(p);
     $('#periodMain').textContent = periodLabel(p);
-    $('#periodSub').textContent = `${p.half === 1 ? '1st' : '2nd'} half · ${dates.length} days`;
-    $('#whoLabel').textContent = state.settings.name || 'Half-monthly hours & pay';
-    $('#setupNotice').hidden = !!state.settings.name;
+    $('#periodSub').textContent = periodSub(p);
+    $('#whoLabel').textContent = state.settings.name || 'Hours, pay & reimbursements';
+    $('#setupNotice').hidden = !!state.settings.name || !state.settings.onboarded;
+    $('#rateCur').textContent = curSymbol;
     const rateIn = $('#rateInput');
     if (document.activeElement !== rateIn) rateIn.value = rateString(periodId(p));
     $('#todayBtn').hidden = samePeriod(p, periodOf(todayISO()));
@@ -994,7 +1393,8 @@ body.typing .bar { transform: translateY(110%); }
 
   function renderList() {
     const today = todayISO();
-    daysEl.innerHTML = periodDates(state.period).map(date => {
+    const dates = periodDates(state.period);
+    daysEl.innerHTML = dates.map(date => {
       const dt = parseISO(date);
       return `<li class="card${date === today ? ' today' : ''}" data-date="${date}">
         <button class="card-head" type="button" aria-expanded="false">
@@ -1007,12 +1407,13 @@ body.typing .bar { transform: translateY(110%); }
       </li>`;
     }).join('');
     const strip = $('#strip');
-    strip.innerHTML = periodDates(state.period).map(date => {
+    strip.style.gridTemplateColumns = `repeat(${dates.length <= 14 ? 7 : 8}, minmax(0, 1fr))`;
+    strip.innerHTML = dates.map(date => {
       const dt = parseISO(date);
       return `<button type="button" class="dot${date === today ? ' today' : ''}" data-date="${date}" aria-label="${DAY_NAMES[dt.getDay()]} ${MONTHS[dt.getMonth()]} ${dt.getDate()}">${dt.getDate()}</button>`;
     }).join('');
     state.open = null;
-    periodDates(state.period).forEach(refreshCardHead);
+    dates.forEach(refreshCardHead);
   }
 
   function refreshCardHead(date) {
@@ -1037,12 +1438,13 @@ body.typing .bar { transform: translateY(110%); }
     let tags = '';
     if (date === todayISO()) tags += '<span class="tag">Today</span>';
     if (off) tags += '<span class="tag off">Day off</span>';
-    if (reimb > 0) tags += `<span class="tag">+${esc(fmt$(reimb))}</span>`;
+    if (reimb > 0) tags += `<span class="tag">🧾 ${esc(fmt$(reimb))}</span>`;
     $('.dname', card).innerHTML = `${DAY_NAMES[dt.getDay()]} ${tags}`;
 
     let sub;
     if (worked) {
       const parts = [sh ? fmtRange(d) : 'Times not set'];
+      if (sh && sh.brk) parts.push(`☕ ${fmtBreak(sh.brk)}`);
       if (d.site) parts.push(d.site);
       sub = parts.join(' · ');
     } else if (off) sub = d.notes ? d.notes : 'Not working';
@@ -1062,6 +1464,30 @@ body.typing .bar { transform: translateY(110%); }
     $('.card-head', card).setAttribute('aria-label', `${DAY_NAMES[dt.getDay()]}, ${MONTHS[dt.getMonth()]} ${dt.getDate()}: ${worked && sh ? fmtH(sh.mins / 60) + ' hours' : off ? 'day off' : 'no entry'}`);
   }
 
+  function renderReimbPanel() {
+    const items = periodReimbItems();
+    const list = $('#reimbList');
+    if (!items.length) {
+      list.innerHTML = '<div class="r-empty">No reimbursements yet. Tap <b>+ Add</b> for 🚕 cab, 🍔 meals, 🅿️ parking or your own types.</div>';
+      $('#reimbFoot').hidden = true;
+      return;
+    }
+    list.innerHTML = items.map(({ date, r }) => {
+      const c = catInfo(r);
+      const amt = num(r.amount);
+      return `<button type="button" class="ritem" data-date="${date}" data-rid="${esc(r.id)}">
+        <span class="emo" aria-hidden="true">${esc(c.emoji)}</span>
+        <span class="rtext">
+          <span class="rname">${esc(c.name)}${r.desc ? ` <span class="rnote">· ${esc(r.desc)}</span>` : ''}</span>
+          <span class="rdate">${shortDate(date)}</span>
+        </span>
+        <span class="ramt${amt > 0 ? '' : ' zero'}">${amt > 0 ? esc(fmt$(amt)) : 'Add amount'}</span>
+      </button>`;
+    }).join('');
+    $('#reimbFoot').hidden = false;
+    $('#reimbTotal').textContent = fmt$(periodTotals().reimb);
+  }
+
   function refreshTotals() {
     const t = periodTotals();
     $('#totHours').textContent = fmtH(t.hours);
@@ -1073,9 +1499,7 @@ body.typing .bar { transform: translateY(110%); }
     $('#stOff').textContent = t.off;
     $('#stWages').textContent = fmt$(t.wages);
     $('#stReimb').textContent = fmt$(t.reimb);
-    const psub = $('#periodSub');
-    const p = state.period;
-    psub.textContent = `${p.half === 1 ? '1st' : '2nd'} half · ${periodDates(p).length} days`;
+    renderReimbPanel();
   }
 
   function timeField(label, w, d) {
@@ -1098,12 +1522,13 @@ body.typing .bar { transform: translateY(110%); }
   function bodyHTML(date) {
     const d = getDay(date) || { sh: '', sm: '', eh: '', em: '', site: '', notes: '' };
     const st = d.status;
+    const brk = String(Math.round(num(d.brk)));
     return `
       <div class="seg" role="group" aria-label="Day status">
         <button type="button" class="seg-btn worked" data-act="status" data-v="worked" aria-pressed="${st === 'worked'}">Worked</button>
         <button type="button" class="seg-btn off" data-act="status" data-v="off" aria-pressed="${st === 'off'}">Day off</button>
       </div>
-      <div class="worked-only" style="display:flex;flex-direction:column;gap:14px"${st === 'worked' ? '' : ' hidden'}>
+      <div class="stack worked-only"${st === 'worked' ? '' : ' hidden'}>
         <div class="times-head">
           <span class="flabel">Shift</span>
           <button type="button" class="link-btn" data-act="copy-prev">Copy previous day</button>
@@ -1113,24 +1538,37 @@ body.typing .bar { transform: translateY(110%); }
           <div class="tsep" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg></div>
           ${timeField('End', 'e', d)}
         </div>
+        <div>
+          <span class="flabel">☕ Unpaid break</span>
+          <div class="chips" role="group" aria-label="Unpaid break">
+            ${BREAKS.map(([v, l]) => `<button type="button" class="chip-btn" data-act="brk" data-v="${v}" aria-pressed="${brk === v}">${l}</button>`).join('')}
+          </div>
+        </div>
         <div class="calc" aria-live="polite"></div>
         <label class="field">
-          <span class="flabel">Site location</span>
+          <span class="flabel">📍 Site location</span>
           <input type="text" data-f="site" value="${esc(d.site)}" placeholder="e.g. 245 Main St, Downtown" autocomplete="off" autocapitalize="words" enterkeyhint="next">
         </label>
       </div>
       <label class="field">
-        <span class="flabel">Notes</span>
-        <textarea data-f="notes" rows="2" placeholder="Tasks, breaks, details…" autocapitalize="sentences">${esc(d.notes)}</textarea>
+        <span class="flabel">📝 Notes</span>
+        <textarea data-f="notes" rows="2" placeholder="Tasks, details…" autocapitalize="sentences">${esc(d.notes)}</textarea>
       </label>
       <div class="reimb">
         <div class="reimb-head">
-          <span class="flabel">Reimbursements</span>
+          <span class="flabel">🧾 Reimbursements</span>
           <button type="button" class="link-btn" data-act="add-reimb">+ Add</button>
         </div>
         <div class="reimb-list"></div>
       </div>
       <div class="body-foot"><button type="button" class="text-danger" data-act="clear-day">Clear day</button></div>`;
+  }
+
+  function catOptions(r) {
+    const cats = state.settings.categories;
+    let html = cats.map(c => `<option value="${esc(c.id)}"${c.id === r.cat ? ' selected' : ''}>${esc(c.emoji)} ${esc(c.name)}</option>`).join('');
+    if (!r.cat || !catById(r.cat)) html = `<option value="" selected>${esc(r.emoji || '🧾')} ${esc(r.type || 'Other')}</option>` + html;
+    return html;
   }
 
   function renderReimb(date) {
@@ -1139,17 +1577,15 @@ body.typing .bar { transform: translateY(110%); }
     if (!list) return;
     const items = (getDay(date) || {}).reimb || [];
     if (!items.length) {
-      list.innerHTML = '<div class="reimb-empty">No reimbursements — cab, meals, parking…</div>';
+      list.innerHTML = '<div class="reimb-empty">None for this day — 🚕 cab, 🍔 meals, 🅿️ parking…</div>';
       return;
     }
     list.innerHTML = items.map(r => `
       <div class="rrow" data-rid="${esc(r.id)}">
-        <select data-rf="type" aria-label="Reimbursement type">
-          ${REIMB_TYPES.map(t => `<option${t === r.type ? ' selected' : ''}>${t}</option>`).join('')}
-        </select>
-        <div class="amt"><span>$</span><input data-rf="amount" type="text" inputmode="decimal" autocomplete="off" placeholder="0.00" value="${esc(r.amount)}" aria-label="Amount"></div>
-        <button type="button" class="del" data-act="del-reimb" aria-label="Remove reimbursement">${X_ICON}</button>
-        <input class="rdesc" data-rf="desc" type="text" autocomplete="off" placeholder="Description (optional)" value="${esc(r.desc)}" aria-label="Description">
+        <select data-rf="cat" aria-label="Reimbursement type">${catOptions(r)}</select>
+        <div class="amt"><span>${esc(curSymbol)}</span><input data-rf="amount" type="text" inputmode="decimal" autocomplete="off" placeholder="0.00" value="${esc(r.amount)}" aria-label="Amount"></div>
+        <button type="button" class="del" data-act="del-reimb" aria-label="Remove reimbursement">${TRASH}</button>
+        <input class="rdesc" data-rf="desc" type="text" autocomplete="off" placeholder="Note (optional)" value="${esc(r.desc)}" aria-label="Note">
       </div>`).join('');
   }
 
@@ -1172,7 +1608,7 @@ body.typing .bar { transform: translateY(110%); }
     el.innerHTML = `
       <div>
         <div class="calc-range">${esc(fmtRange(d))}${s.overnight ? ' <span class="tag">+1 day</span>' : ''}</div>
-        <div class="calc-dur">${fmtDur(s.mins)}</div>
+        <div class="calc-dur">${s.brk ? `${fmtDur(s.gross)} − ${fmtBreak(s.brk)} break = ${fmtDur(s.mins)}` : fmtDur(s.mins)}</div>
       </div>
       <div class="calc-r num">${rate
         ? `${fmtH(hrs)} × ${esc(fmt$(rate))} = <b>${esc(fmt$(round2(hrs * rate)))}</b>`
@@ -1278,6 +1714,12 @@ body.typing .bar { transform: translateY(110%); }
       afterChange(date);
       // Continue the entry flow: start AM/PM → end hour.
       if (w === 's' && !d.eh) { const eh = $('[data-f="eh"]', card); if (eh) eh.focus(); }
+    } else if (act === 'brk') {
+      const d = ensureDay(date);
+      if (btn.dataset.v === '0') delete d.brk; else d.brk = btn.dataset.v;
+      btn.parentNode.querySelectorAll('.chip-btn').forEach(b => b.setAttribute('aria-pressed', String(b === btn)));
+      rememberTimes(d);
+      afterChange(date);
     } else if (act === 'copy-prev') {
       const prev = Object.keys(state.days)
         .filter(k => k < date && state.days[k].status === 'worked' && shift(state.days[k]))
@@ -1285,33 +1727,36 @@ body.typing .bar { transform: translateY(110%); }
       if (!prev) { toast('No earlier worked day to copy'); return; }
       const d = ensureDay(date), src = state.days[prev];
       TIME_FIELDS.forEach(f => { d[f] = src[f]; });
+      if (src.brk) d.brk = src.brk; else delete d.brk;
       if (!d.site) d.site = src.site;
       rerenderBody(date);
       afterChange(date);
-      const pd = parseISO(prev);
-      toast(`Copied from ${DAY_SHORT[pd.getDay()]}, ${MONTHS[pd.getMonth()]} ${pd.getDate()}`);
+      toast(`Copied from ${shortDate(prev)}`);
     } else if (act === 'add-reimb') {
       const d = ensureDay(date);
-      const r = { id: uid(), type: 'Cab', amount: '', desc: '' };
+      const c = state.settings.categories[0];
+      const r = { id: uid(), cat: c.id, type: c.name, emoji: c.emoji, amount: '', desc: '' };
       d.reimb.push(r);
       renderReimb(date);
       afterChange(date);
       const inp = $(`.rrow[data-rid="${r.id}"] [data-rf="amount"]`, card);
       if (inp) inp.focus();
     } else if (act === 'del-reimb') {
-      const d = getDay(date);
-      const rid = btn.closest('.rrow').dataset.rid;
-      if (d) d.reimb = d.reimb.filter(r => r.id !== rid);
-      renderReimb(date);
-      afterChange(date);
+      deleteReimb(date, btn.closest('.rrow').dataset.rid);
     } else if (act === 'clear-day') {
-      if (!getDay(date)) return;
-      const dt = parseISO(date);
-      if (!confirm(`Clear all entries for ${DAY_SHORT[dt.getDay()]}, ${MONTHS[dt.getMonth()]} ${dt.getDate()}?`)) return;
+      const d = getDay(date);
+      if (!d) return;
+      const snapshot = clone(d);
       delete state.days[date];
       rerenderBody(date);
       afterChange(date);
-      toast('Day cleared');
+      toast(`${shortDate(date)} cleared`, {
+        undo: () => {
+          state.days[date] = snapshot;
+          rerenderBody(date);
+          afterChange(date);
+        }
+      });
     }
   });
 
@@ -1371,6 +1816,10 @@ body.typing .bar { transform: translateY(110%); }
         const v = cleanDecimal(inp.value);
         if (inp.value !== v) inp.value = v;
         r.amount = v;
+      } else if (rf === 'cat') {
+        const c = catById(inp.value);
+        if (!c) return;
+        Object.assign(r, { cat: c.id, type: c.name, emoji: c.emoji });
       } else r[rf] = inp.value;
       afterChange(date);
     }
@@ -1425,6 +1874,23 @@ body.typing .bar { transform: translateY(110%); }
     setTimeout(() => { if (document.activeElement === el && el.value.length === 2 && el.selectionStart === el.selectionEnd) el.select(); }, 0);
   });
 
+  function deleteReimb(date, rid) {
+    const d = getDay(date);
+    if (!d) return;
+    const index = d.reimb.findIndex(r => r.id === rid);
+    if (index < 0) return;
+    const [item] = d.reimb.splice(index, 1);
+    if (state.open === date) renderReimb(date);
+    afterChange(date);
+    toast(`${catInfo(item).name} removed`, {
+      undo: () => {
+        ensureDay(date).reimb.splice(index, 0, item);
+        if (state.open === date) renderReimb(date);
+        afterChange(date);
+      }
+    });
+  }
+
   /* ---------- Header controls ---------- */
   $('#strip').addEventListener('click', e => {
     const dot = e.target.closest('.dot');
@@ -1448,15 +1914,18 @@ body.typing .bar { transform: translateY(110%); }
     scrollToToday();
   });
 
+  function onRatesChanged() {
+    periodDates(state.period).forEach(refreshCardHead);
+    if (state.open) refreshCalc(state.open);
+    refreshTotals();
+  }
   $('#rateInput').addEventListener('input', e => {
     const v = cleanDecimal(e.target.value);
     if (e.target.value !== v) e.target.value = v;
     state.settings.periodRates[periodId(state.period)] = v;
     state.settings.rate = v;
     markSettings();
-    periodDates(state.period).forEach(refreshCardHead);
-    if (state.open) refreshCalc(state.open);
-    refreshTotals();
+    onRatesChanged();
   });
 
   /* ---------- Sheets ---------- */
@@ -1467,8 +1936,11 @@ body.typing .bar { transform: translateY(110%); }
     ov.classList.add('show');
     ov.setAttribute('aria-hidden', 'false');
     document.body.classList.add('locked');
+    const sheet = $('.sheet', ov);
+    if (sheet) sheet.scrollTop = 0;
   }
   function closeSheet(ov) {
+    if (typeof ov === 'string') ov = document.getElementById(ov);
     ov.classList.remove('show');
     ov.setAttribute('aria-hidden', 'true');
     if (!document.querySelector('.overlay.show')) document.body.classList.remove('locked');
@@ -1484,15 +1956,83 @@ body.typing .bar { transform: translateY(110%); }
     if (e.key === 'Escape') { const ov = document.querySelector('.overlay.show'); if (ov) closeSheet(ov); }
   });
 
-  // Settings
+  const fillSelect = (sel, items, value) => {
+    sel.innerHTML = items.map(([v, l]) => `<option value="${esc(v)}"${String(v) === String(value) ? ' selected' : ''}>${esc(l)}</option>`).join('');
+  };
+  const currencyItems = () => CURRENCIES.map(([c, n]) => {
+    let sym = c;
+    try { sym = new Intl.NumberFormat('en-US', { style: 'currency', currency: c, currencyDisplay: 'narrowSymbol' }).formatToParts(0).find(p => p.type === 'currency').value; } catch (e) { /* keep code */ }
+    return [c, `${c} ${sym === c ? '' : sym + ' '}· ${n}`];
+  });
+
+  /* ---------- Welcome (first run) ---------- */
+  function openWelcome() {
+    $('#wName').value = state.settings.name;
+    $('#wRate').value = state.settings.rate;
+    fillSelect($('#wCurrency'), currencyItems(), state.settings.currency);
+    fillSelect($('#wPeriod'), PERIOD_TYPES, state.settings.periodType);
+    // Shown once: closing it any way counts as done.
+    state.settings.onboarded = true;
+    markSettings();
+    openSheet('welcomeOverlay');
+  }
+  $('#wRate').addEventListener('input', e => { const v = cleanDecimal(e.target.value); if (e.target.value !== v) e.target.value = v; });
+  $('#wStart').addEventListener('click', () => {
+    state.settings.name = $('#wName').value.trim().slice(0, 120);
+    state.settings.rate = cleanDecimal($('#wRate').value);
+    state.settings.currency = $('#wCurrency').value;
+    state.settings.periodType = $('#wPeriod').value;
+    markSettings();
+    setMoney(state.settings.currency);
+    state.period = periodOf(todayISO());
+    render();
+    closeSheet('welcomeOverlay');
+    toast('You’re all set ✅');
+    scrollToToday();
+  });
+
+  /* ---------- Settings ---------- */
+  function renderPeriodOptions() {
+    const t = state.settings.periodType;
+    $('#weekStartField').hidden = !(t === 'week' || t === 'biweek');
+    $('#biweekField').hidden = t !== 'biweek';
+    if (t === 'biweek') {
+      const cur = state.settings.biweekShift;
+      const opts = [0, 1].map(shiftVal => {
+        state.settings.biweekShift = shiftVal;
+        const p = periodOf(todayISO());
+        return [String(shiftVal), `${shortDate(p.start)} (${periodLabel(p)})`];
+      });
+      state.settings.biweekShift = cur;
+      fillSelect($('#setBiweek'), opts, cur);
+    }
+  }
+
+  function renderCatList() {
+    const cats = state.settings.categories;
+    $('#catList').innerHTML = cats.map(c => `
+      <div class="cat-row" data-id="${esc(c.id)}">
+        <input class="emo-in" data-cf="emoji" type="text" value="${esc(c.emoji)}" aria-label="Emoji" autocomplete="off">
+        <input data-cf="name" type="text" value="${esc(c.name)}" aria-label="Type name" autocapitalize="words" autocomplete="off">
+        <button class="del" type="button" data-cdel aria-label="Remove ${esc(c.name)}">${TRASH}</button>
+      </div>`).join('');
+  }
+
   function openSettings() {
     $('#setName').value = state.settings.name;
     $('#setRate').value = state.settings.rate;
+    fillSelect($('#setCurrency'), currencyItems(), state.settings.currency);
+    fillSelect($('#setPeriod'), PERIOD_TYPES, state.settings.periodType);
+    $('#setWeekStart').value = String(state.settings.weekStart);
+    renderPeriodOptions();
+    renderCatList();
     document.querySelectorAll('#clockSeg [data-clock]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.clock === state.settings.clock)));
     applyTheme();
     $('#storageNote').textContent = Store.isFallback
       ? 'IndexedDB is unavailable in this browser mode; data is saved to local storage on this device.'
-      : 'All data is stored privately on this device (IndexedDB). Export a backup before clearing Safari data.';
+      : 'All data is stored privately on this device. Export a backup before clearing browser data or changing phones.';
+    $('#versionLabel').textContent = `v${APP_VERSION}`;
+    $('#repoLink').href = REPO_URL;
     openSheet('settingsOverlay');
   }
   $('#settingsBtn').addEventListener('click', openSettings);
@@ -1510,10 +2050,26 @@ body.typing .bar { transform: translateY(110%); }
     state.settings.rate = v;
     markSettings();
     renderHeader();
-    periodDates(state.period).forEach(refreshCardHead);
-    if (state.open) refreshCalc(state.open);
-    refreshTotals();
+    onRatesChanged();
   });
+  $('#setCurrency').addEventListener('change', e => {
+    state.settings.currency = e.target.value;
+    markSettings();
+    setMoney(state.settings.currency);
+    if (state.open) closeCard(state.open);
+    render();
+  });
+  function onPeriodSettingChanged() {
+    markSettings();
+    if (state.open) closeCard(state.open);
+    state.period = periodOf(todayISO());
+    renderPeriodOptions();
+    render();
+  }
+  $('#setPeriod').addEventListener('change', e => { state.settings.periodType = e.target.value; onPeriodSettingChanged(); });
+  $('#setWeekStart').addEventListener('change', e => { state.settings.weekStart = Number(e.target.value); onPeriodSettingChanged(); });
+  $('#setBiweek').addEventListener('change', e => { state.settings.biweekShift = Number(e.target.value); onPeriodSettingChanged(); });
+
   $('#clockSeg').addEventListener('click', e => {
     const b = e.target.closest('[data-clock]');
     if (!b) return;
@@ -1536,6 +2092,84 @@ body.typing .bar { transform: translateY(110%); }
     if (mq.addEventListener) mq.addEventListener('change', onChange); else if (mq.addListener) mq.addListener(onChange);
   }
 
+  // Reimbursement types
+  function onCategoriesChanged() {
+    markSettings();
+    if (state.open) renderReimb(state.open);
+    periodDates(state.period).forEach(refreshCardHead);
+    renderReimbPanel();
+  }
+  function addCategory(emoji, name) {
+    name = String(name || '').trim().slice(0, 40);
+    if (!name) { toast('Type a name for the new type'); return null; }
+    const existing = state.settings.categories.find(c => c.name.toLowerCase() === name.toLowerCase());
+    if (existing) { toast(`“${existing.name}” already exists`); return existing; }
+    const c = { id: uid(), emoji: firstGrapheme(emoji) || '🧾', name };
+    state.settings.categories.push(c);
+    onCategoriesChanged();
+    return c;
+  }
+  $('#catList').addEventListener('input', e => {
+    const row = e.target.closest('.cat-row');
+    const c = row && catById(row.dataset.id);
+    if (!c) return;
+    if (e.target.dataset.cf === 'emoji') {
+      const v = firstGrapheme(e.target.value);
+      if (v) c.emoji = v;
+    } else if (e.target.dataset.cf === 'name') {
+      c.name = e.target.value.slice(0, 40) || c.name;
+    }
+    onCategoriesChanged();
+  });
+  $('#catList').addEventListener('focusout', e => {
+    if (e.target.dataset && e.target.dataset.cf === 'emoji') {
+      const row = e.target.closest('.cat-row');
+      const c = row && catById(row.dataset.id);
+      if (c) e.target.value = c.emoji;
+    }
+  });
+  $('#catList').addEventListener('click', e => {
+    const del = e.target.closest('[data-cdel]');
+    if (!del) return;
+    const id = del.closest('.cat-row').dataset.id;
+    const cats = state.settings.categories;
+    if (cats.length <= 1) { toast('Keep at least one type'); return; }
+    const index = cats.findIndex(c => c.id === id);
+    const [removed] = cats.splice(index, 1);
+    renderCatList();
+    onCategoriesChanged();
+    toast(`${removed.emoji} ${removed.name} removed`, {
+      undo: () => {
+        state.settings.categories.splice(index, 0, removed);
+        renderCatList();
+        onCategoriesChanged();
+      }
+    });
+  });
+  $('#catAddBtn').addEventListener('click', () => {
+    const c = addCategory($('#catEmoji').value, $('#catName').value);
+    if (c) {
+      $('#catEmoji').value = '';
+      $('#catName').value = '';
+      renderCatList();
+      toast(`${c.emoji} ${c.name} added`);
+    }
+  });
+  $('#catName').addEventListener('keydown', e => { if (e.key === 'Enter') $('#catAddBtn').click(); });
+  $('#catReset').addEventListener('click', () => {
+    const before = clone(state.settings.categories);
+    state.settings.categories = clone(DEFAULT_CATEGORIES);
+    renderCatList();
+    onCategoriesChanged();
+    toast('Default types restored', {
+      undo: () => {
+        state.settings.categories = before;
+        renderCatList();
+        onCategoriesChanged();
+      }
+    });
+  });
+
   $('#clearPeriodBtn').addEventListener('click', () => {
     const p = state.period;
     if (!confirm(`Delete all entries for ${periodLabel(p)}? This can’t be undone.`)) return;
@@ -1552,7 +2186,8 @@ body.typing .bar { transform: translateY(110%); }
     await flush();
     const data = {
       app: 'timesheet',
-      version: 1,
+      version: 2,
+      appVersion: APP_VERSION,
       exportedAt: new Date().toISOString(),
       settings: state.settings,
       days: Object.values(state.days).filter(d => !isEmptyDay(d)).sort((a, b) => a.date.localeCompare(b.date))
@@ -1569,44 +2204,157 @@ body.typing .bar { transform: translateY(110%); }
     const file = e.target.files && e.target.files[0];
     e.target.value = '';
     if (!file) return;
+    const prevSettings = state.settings;
     try {
       const data = JSON.parse(await file.text());
       if (!data || !Array.isArray(data.days)) throw new Error('Invalid backup file');
-      const days = data.days.map(normalizeDay).filter(Boolean);
-      if (!confirm(`Import ${days.length} day${days.length === 1 ? '' : 's'} from backup? This replaces all current data.`)) return;
+      // Settings first: day normalisation links reimbursements to the imported types.
       const settings = normalizeSettings(data.settings);
+      settings.onboarded = true;
+      state.settings = settings;
+      const days = data.days.map(normalizeDay).filter(Boolean);
+      if (!confirm(`Import ${days.length} day${days.length === 1 ? '' : 's'} from backup? This replaces all current data.`)) {
+        state.settings = prevSettings;
+        return;
+      }
       await flush();
       await Store.replaceAll(settings, days);
-      state.settings = settings;
       state.days = {};
       days.forEach(d => { state.days[d.date] = d; });
+      setMoney(settings.currency);
+      state.period = periodOf(todayISO());
       applyTheme();
       render();
       openSettings();
-      toast('Backup imported');
+      toast('Backup imported ✅');
     } catch (err) {
       console.error(err);
+      state.settings = prevSettings;
       toast('Couldn’t import: invalid backup file');
     }
   });
 
-  /* ---------- Share ---------- */
+  // Community: share the app link itself
+  $('#shareAppBtn').addEventListener('click', async () => {
+    const url = appLink();
+    const text = 'Free timesheet app ⏱️ — track hours, pay & reimbursements. No sign-up, your data stays on your phone.';
+    if (navigator.share && !isFramed) {
+      try { await navigator.share({ title: 'Timesheet', text, url }); return; }
+      catch (e) { if (e && e.name === 'AbortError') return; }
+    }
+    toast((await copyText(`${text}\n${url}`)) ? 'App link copied — paste it to share 📋' : url);
+  });
+
+  /* ---------- Reimbursement editor ---------- */
+  let rEdit = null;   // { date, rid } when editing an existing item
+  let rCat = null;    // selected category id ('' keeps an item's saved custom type)
+
+  function renderCatGrid() {
+    const cats = state.settings.categories;
+    $('#rCatGrid').innerHTML = cats.map(c => `
+      <button type="button" class="cat-chip" data-cat="${esc(c.id)}" aria-pressed="${c.id === rCat}">
+        <span class="ce" aria-hidden="true">${esc(c.emoji)}</span><span class="cn">${esc(c.name)}</span>
+      </button>`).join('') +
+      '<button type="button" class="cat-chip new" data-newcat><span class="ce" aria-hidden="true">＋</span><span class="cn">New type</span></button>';
+  }
+
+  function openReimbSheet(date, rid) {
+    const dates = periodDates(state.period);
+    const item = rid && getDay(date) ? getDay(date).reimb.find(x => x.id === rid) : null;
+    rEdit = item ? { date, rid } : null;
+    const today = todayISO();
+    const def = item ? date
+      : state.open && dates.includes(state.open) ? state.open
+      : dates.includes(today) ? today : dates[0];
+    $('#reimbTitle').textContent = item ? 'Edit reimbursement' : 'Add reimbursement';
+    fillSelect($('#rDate'), dates.map(d => [d, shortDate(d)]), def);
+    rCat = item ? (item.cat && catById(item.cat) ? item.cat : '') : state.settings.categories[0].id;
+    renderCatGrid();
+    $('#rNewCat').hidden = true;
+    $('#rAmount').value = item ? item.amount : '';
+    $('#rDesc').value = item ? item.desc : '';
+    $('#rCur').textContent = curSymbol;
+    $('#rDelete').hidden = !item;
+    $('#rActions').classList.toggle('single', !item);
+    openSheet('reimbOverlay');
+  }
+
+  $('#addReimbBtn').addEventListener('click', () => openReimbSheet(null, null));
+  $('#reimbList').addEventListener('click', e => {
+    const row = e.target.closest('.ritem');
+    if (row) openReimbSheet(row.dataset.date, row.dataset.rid);
+  });
+  $('#rCatGrid').addEventListener('click', e => {
+    if (e.target.closest('[data-newcat]')) {
+      $('#rNewCat').hidden = false;
+      $('#rNewName').focus();
+      return;
+    }
+    const chip = e.target.closest('[data-cat]');
+    if (!chip) return;
+    rCat = chip.dataset.cat;
+    document.querySelectorAll('#rCatGrid [data-cat]').forEach(b => b.setAttribute('aria-pressed', String(b === chip)));
+  });
+  $('#rNewAdd').addEventListener('click', () => {
+    const c = addCategory($('#rNewEmoji').value, $('#rNewName').value);
+    if (!c) return;
+    rCat = c.id;
+    $('#rNewEmoji').value = '';
+    $('#rNewName').value = '';
+    $('#rNewCat').hidden = true;
+    renderCatGrid();
+  });
+  $('#rNewName').addEventListener('keydown', e => { if (e.key === 'Enter') $('#rNewAdd').click(); });
+  $('#rAmount').addEventListener('input', e => { const v = cleanDecimal(e.target.value); if (e.target.value !== v) e.target.value = v; });
+
+  $('#rSave').addEventListener('click', () => {
+    const amount = cleanDecimal($('#rAmount').value);
+    if (!(num(amount) > 0)) { toast('Enter an amount'); $('#rAmount').focus(); return; }
+    const date = $('#rDate').value;
+    const old = rEdit && getDay(rEdit.date) ? getDay(rEdit.date).reimb.find(x => x.id === rEdit.rid) : null;
+    const c = rCat ? catById(rCat) : null;
+    const item = {
+      id: old ? old.id : uid(),
+      cat: c ? c.id : (old ? old.cat : ''),
+      type: c ? c.name : (old ? old.type : 'Other'),
+      emoji: c ? c.emoji : (old ? old.emoji : '🧾'),
+      amount,
+      desc: $('#rDesc').value.trim().slice(0, 300)
+    };
+    if (old && rEdit.date !== date) {
+      const od = getDay(rEdit.date);
+      od.reimb = od.reimb.filter(x => x.id !== old.id);
+      if (state.open === rEdit.date) renderReimb(rEdit.date);
+      afterChange(rEdit.date);
+    }
+    const d = ensureDay(date);
+    const i = d.reimb.findIndex(x => x.id === item.id);
+    if (i >= 0) d.reimb[i] = item; else d.reimb.push(item);
+    if (state.open === date) renderReimb(date);
+    afterChange(date);
+    closeSheet('reimbOverlay');
+    toast(`${catInfo(item).emoji} ${old ? 'Updated' : 'Added'} ${fmt$(num(amount))}`);
+  });
+  $('#rDelete').addEventListener('click', () => {
+    if (!rEdit) return;
+    closeSheet('reimbOverlay');
+    deleteReimb(rEdit.date, rEdit.rid);
+  });
+
+  /* ---------- Report (message) ---------- */
   function buildReport() {
     const p = state.period;
-    const pid = periodId(p);
-    const rate = getRate(pid);
+    const rate = getRate(periodId(p));
     const t = periodTotals(p);
     const RULE = '────────────────';
     const L = [];
-    const dateLabel = date => { const dt = parseISO(date); return `${DAY_SHORT[dt.getDay()]}, ${MONTHS[dt.getMonth()]} ${dt.getDate()}`; };
-    const oneLine = s => String(s).trim().replace(/\s*\n+\s*/g, '; ');
 
-    L.push('TIMESHEET');
+    L.push('🕒 TIMESHEET');
     if (state.settings.name) L.push(`Name: ${state.settings.name.trim()}`);
-    L.push(`Period: ${periodLabel(p)}`);
+    L.push(`Period: ${periodLabel(p)} (${periodKind(p)})`);
     L.push(`Rate: ${fmt$(rate)}/hr`);
     L.push('');
-    L.push('DAILY BREAKDOWN');
+    L.push('📋 DAILY BREAKDOWN');
     L.push(RULE);
 
     const dates = periodDates(p);
@@ -1614,33 +2362,29 @@ body.typing .bar { transform: translateY(110%); }
     if (!workedDates.length) L.push('No days worked', '');
     workedDates.forEach(date => {
       const d = getDay(date);
-      const mins = dayMinutes(d);
-      L.push(dateLabel(date));
-      L.push(`${fmtRange(d)} | ${fmtH(mins / 60)} hrs | ${fmt$(dayPay(d))}`);
-      if (d.site && d.site.trim()) L.push(`Site: ${oneLine(d.site)}`);
-      if (d.notes && d.notes.trim()) L.push(`Notes: ${oneLine(d.notes)}`);
+      const s = shift(d);
+      L.push(shortDate(date));
+      L.push(`${fmtRange(d)}${s.brk ? ` (${fmtBreak(s.brk)} break)` : ''} | ${fmtH(s.mins / 60)} hrs | ${fmt$(dayPay(d))}`);
+      if (d.site && d.site.trim()) L.push(`📍 Site: ${oneLine(d.site)}`);
+      if (d.notes && d.notes.trim()) L.push(`📝 Notes: ${oneLine(d.notes)}`);
       L.push('');
     });
 
-    const reimbLines = [];
-    dates.forEach(date => {
-      const d = getDay(date);
-      if (!d || !d.reimb) return;
-      d.reimb.forEach(r => {
-        const amt = num(r.amount);
-        if (amt <= 0) return;
-        reimbLines.push(`${dateLabel(date)} | ${r.type} | ${fmt$(amt)}${r.desc && r.desc.trim() ? ` (${oneLine(r.desc)})` : ''}`);
+    const reimbLines = periodReimbItems(p)
+      .filter(({ r }) => num(r.amount) > 0)
+      .map(({ date, r }) => {
+        const c = catInfo(r);
+        return `${shortDate(date)} | ${c.emoji} ${c.name} | ${fmt$(num(r.amount))}${r.desc && r.desc.trim() ? ` (${oneLine(r.desc)})` : ''}`;
       });
-    });
     if (reimbLines.length) {
-      L.push('REIMBURSEMENTS');
+      L.push('🧾 REIMBURSEMENTS');
       L.push(RULE);
       L.push(...reimbLines);
       L.push(`Subtotal: ${fmt$(t.reimb)}`);
       L.push('');
     }
 
-    L.push('SUMMARY');
+    L.push('📊 SUMMARY');
     L.push(RULE);
     L.push(`Days worked: ${t.worked}`);
     if (t.off) L.push(`Days off: ${t.off}`);
@@ -1653,9 +2397,8 @@ body.typing .bar { transform: translateY(110%); }
   }
 
   /* ---------- File sharing / saving ---------- */
-  // Inside claude.ai the page is framed: the system share sheet is blocked there, but the
-  // platform's downloads capability can save files (and hands them to the iOS share sheet in the Claude app).
-  const isFramed = (() => { try { return window.self !== window.top; } catch (e) { return true; } })();
+  // Inside an embedded viewer (e.g. claude.ai) the system share sheet is blocked, but the host's
+  // downloads capability can save files (and hands them to the iOS share sheet in the Claude app).
   const downloadsReady = window.claude && typeof window.claude.use === 'function'
     ? window.claude.use('downloads').catch(() => null)
     : Promise.resolve(null);
@@ -1684,6 +2427,23 @@ body.typing .bar { transform: translateY(110%); }
     a.click();
     setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 1500);
     return 'saved';
+  }
+
+  async function copyText(text) {
+    try {
+      if (navigator.clipboard && window.isSecureContext) { await navigator.clipboard.writeText(text); return true; }
+    } catch (e) { /* fall through */ }
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.setAttribute('readonly', '');
+    ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0;font-size:16px';
+    document.body.appendChild(ta);
+    ta.select();
+    ta.setSelectionRange(0, text.length);
+    let ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+    ta.remove();
+    return ok;
   }
 
   /* ---------- Page image (the timesheet drawn like the app) ---------- */
@@ -1734,7 +2494,6 @@ body.typing .bar { transform: translateY(110%); }
     const p = state.period;
     const t = periodTotals(p);
     const rate = getRate(periodId(p));
-    const oneLine = v => String(v).trim().replace(/\s*\n+\s*/g, '; ');
     const font = f => { m.font = f; if (g) g.font = f; };
     const text = (str, x, y, color, align = 'left') => {
       if (!g) return;
@@ -1751,9 +2510,9 @@ body.typing .bar { transform: translateY(110%); }
 
     // Header
     font(`700 30px ${FONT_C}`); text('Timesheet', P, y + 28, IMG.text);
-    font(`500 15px ${FONT_B}`); text(fitText(m, state.settings.name || 'Half-monthly hours & pay', CW * 0.5), P, y + 49, state.settings.name ? IMG.text : IMG.muted);
-    font(`600 19px ${FONT_C}`); text(periodLabel(p), W - P, y + 25, IMG.text, 'right');
-    font(`600 11px ${FONT_B}`); text(`${p.half === 1 ? '1ST' : '2ND'} HALF · ${periodDates(p).length} DAYS`, W - P, y + 44, IMG.muted, 'right');
+    font(`500 15px ${FONT_B}`); text(fitText(m, state.settings.name || 'Hours, pay & reimbursements', CW * 0.45), P, y + 49, state.settings.name ? IMG.text : IMG.muted);
+    font(`600 19px ${FONT_C}`); text(fitText(m, periodLabel(p), CW * 0.55), W - P, y + 25, IMG.text, 'right');
+    font(`600 11px ${FONT_B}`); text(periodSub(p).toUpperCase(), W - P, y + 44, IMG.muted, 'right');
     y += 66;
 
     // Summary card
@@ -1818,7 +2577,7 @@ body.typing .bar { transform: translateY(110%); }
         tx += pw + 6;
       };
       if (off) pill('Day off', IMG.red, IMG.redSoft);
-      if (reimb > 0) pill('+' + fmt$(reimb), IMG.accent, IMG.accentSoft);
+      if (reimb > 0) pill('🧾 ' + fmt$(reimb), IMG.accent, IMG.accentSoft);
 
       if (sh) {
         font(`500 12px ${FONT_B}`);
@@ -1831,35 +2590,33 @@ body.typing .bar { transform: translateY(110%); }
       }
 
       font(`400 13px ${FONT_B}`);
-      const sub = sh ? [fmtRange(d), d.site && d.site.trim()].filter(Boolean).join(' · ') : off ? 'Not working' : 'Reimbursement only';
+      const sub = sh
+        ? [fmtRange(d), sh.brk ? `☕ ${fmtBreak(sh.brk)}` : '', d.site && d.site.trim()].filter(Boolean).join(' · ')
+        : off ? 'Not working' : 'Reimbursement only';
       text(fitText(m, sub, CW - 68 - 14 - rightW), nx, y + 51, IMG.muted);
       notes.forEach((ln, i) => text(ln, nx, y + 70 + i * 17, IMG.muted));
       y += h + 8;
     });
 
     // Reimbursements
-    const items = [];
-    periodDates(p).forEach(date => {
-      const d = getDay(date);
-      if (!d || !d.reimb) return;
-      const dt = parseISO(date);
-      d.reimb.forEach(r => {
-        const amt = num(r.amount);
-        if (amt > 0) items.push({ left: `${DAY_SHORT[dt.getDay()]}, ${MONTHS[dt.getMonth()]} ${dt.getDate()} · ${r.type}${r.desc && r.desc.trim() ? ' — ' + oneLine(r.desc) : ''}`, amt });
-      });
+    const items = periodReimbItems(p).filter(({ r }) => num(r.amount) > 0).map(({ date, r }) => {
+      const c = catInfo(r);
+      return { left: `${c.emoji} ${c.name}${r.desc && r.desc.trim() ? ' — ' + oneLine(r.desc) : ''}`, date: shortDate(date), amt: num(r.amount) };
     });
     if (items.length) {
       y += 6;
       label('REIMBURSEMENTS', y + 4);
       y += 14;
-      const rh = 16 + items.length * 26 + 40;
+      const rowH = 40;
+      const rh = 10 + items.length * rowH + 44;
       box(P, y, CW, rh, 14, IMG.surface, IMG.border);
       items.forEach((it, i) => {
-        const ry = y + 30 + i * 26;
-        font(`400 14px ${FONT_B}`); text(fitText(m, it.left, CW - 28 - 90), P + 14, ry, IMG.text);
-        font(`600 15px ${FONT_C}`); text(fmt$(it.amt), W - P - 14, ry, IMG.text, 'right');
+        const ry = y + 10 + i * rowH;
+        font(`500 14px ${FONT_B}`); text(fitText(m, it.left, CW - 28 - 90), P + 14, ry + 17, IMG.text);
+        font(`400 12px ${FONT_B}`); text(it.date, P + 14, ry + 33, IMG.muted);
+        font(`600 16px ${FONT_C}`); text(fmt$(it.amt), W - P - 14, ry + 24, IMG.text, 'right');
       });
-      const ly = y + 16 + items.length * 26;
+      const ly = y + 10 + items.length * rowH + 4;
       if (g) { g.fillStyle = IMG.border; g.fillRect(P + 14, ly, CW - 28, 1); }
       font(`600 14px ${FONT_B}`); text('Subtotal', P + 14, ly + 26, IMG.text);
       font(`700 17px ${FONT_C}`); text(fmt$(t.reimb), W - P - 14, ly + 26, IMG.text, 'right');
@@ -1921,7 +2678,7 @@ body.typing .bar { transform: translateY(110%); }
   const pageFilename = () => {
     const p = state.period;
     const who = (state.settings.name || '').trim().replace(/[^\w\- ]+/g, '').replace(/\s+/g, '-');
-    return `Timesheet-${who ? who + '-' : ''}${p.y}-${pad2(p.m + 1)}-${p.half === 1 ? '01-15' : '16-' + periodEnd(p)}.png`;
+    return `Timesheet-${who ? who + '-' : ''}${p.start}_to_${p.end}.png`;
   };
 
   function setShareMode(mode) {
@@ -2001,24 +2758,34 @@ body.typing .bar { transform: translateY(110%); }
     }
   });
 
-  async function copyText(text) {
-    try {
-      if (navigator.clipboard && window.isSecureContext) { await navigator.clipboard.writeText(text); return true; }
-    } catch (e) { /* fall through */ }
-    const ta = document.createElement('textarea');
-    ta.value = text;
-    ta.setAttribute('readonly', '');
-    ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0;font-size:16px';
-    document.body.appendChild(ta);
-    ta.select();
-    ta.setSelectionRange(0, text.length);
-    let ok = false;
-    try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
-    ta.remove();
-    return ok;
-  }
   $('#shareCopy').addEventListener('click', async () => {
     toast((await copyText(shareText)) ? 'Copied to clipboard' : 'Copy failed — select the text in the preview');
+  });
+
+  /* ---------- Install hint (hosted app, not yet installed) ---------- */
+  let installPrompt = null;
+  function updateInstallHint() {
+    const show = isHosted && !isStandalone && !state.settings.installHintDismissed && (isIOS || installPrompt);
+    $('#installHint').hidden = !show;
+    $('#installBtn').hidden = !installPrompt;
+    if (installPrompt) $('#installText').innerHTML = 'Install <b>Timesheet</b> on this phone for quick access.';
+  }
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    installPrompt = e;
+    updateInstallHint();
+  });
+  $('#installBtn').addEventListener('click', async () => {
+    if (!installPrompt) return;
+    installPrompt.prompt();
+    try { await installPrompt.userChoice; } catch (e) { /* ignore */ }
+    installPrompt = null;
+    updateInstallHint();
+  });
+  $('#installClose').addEventListener('click', () => {
+    state.settings.installHintDismissed = true;
+    markSettings();
+    updateInstallHint();
   });
 
   /* ---------- Keyboard-aware bottom bar ---------- */
@@ -2057,23 +2824,39 @@ body.typing .bar { transform: translateY(110%); }
   async function boot() {
     makeTouchIcon();
     await Store.init();
+    let hasData = false;
     try {
       const { settings, days } = await Store.loadAll();
+      // Settings first: day normalisation links reimbursements to the saved types.
       state.settings = normalizeSettings(settings);
       days.forEach(raw => { const d = normalizeDay(raw); if (d) state.days[d.date] = d; });
+      hasData = days.length > 0;
     } catch (e) {
       console.error(e);
       toast('Couldn’t load saved data');
     }
+    // People upgrading from v1 already have data: don't greet them as new.
+    if (!state.settings.onboarded && (hasData || state.settings.name || state.settings.rate)) {
+      state.settings.onboarded = true;
+      markSettings();
+    }
     if (navigator.storage && navigator.storage.persist) {
       navigator.storage.persist().catch(() => {});
     }
+    setMoney(state.settings.currency);
+    state.period = periodOf(todayISO());
     applyTheme();
     render();
+    updateInstallHint();
     setHeaderH();
     // Wait for web fonts so card heights are final before positioning today's card.
     const ready = document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve();
     ready.then(() => { setHeaderH(); scrollToToday(); });
+    if (!state.settings.onboarded) openWelcome();
+
+    if ('serviceWorker' in navigator && isHosted && location.protocol === 'https:') {
+      navigator.serviceWorker.register('sw.js').catch(err => console.warn('Service worker not registered:', err));
+    }
   }
   boot();
 })();
