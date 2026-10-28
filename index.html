@@ -134,14 +134,14 @@ svg { display: block; }
 
 .meta-row { display: flex; gap: 8px; margin-top: 10px; }
 .rate-field {
-  flex: 1; display: flex; align-items: center; gap: 8px; height: 44px; padding: 0 12px;
+  flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; height: 44px; padding: 0 12px;
   border: 1px solid var(--border); background: var(--surface); border-radius: 12px; box-shadow: var(--shadow);
 }
 .rate-field:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
 .rate-field .rl { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; white-space: nowrap; }
 .rate-field .cur, .rate-field .per { font-family: var(--font-c); font-size: 18px; color: var(--muted); }
 .rate-field input {
-  flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; padding: 0;
+  flex: 1; min-width: 0; width: 0; border: 0; outline: 0; background: transparent; padding: 0;
   font-family: var(--font-c); font-weight: 600; font-size: 20px; text-align: right; font-variant-numeric: tabular-nums;
 }
 .today-btn {
@@ -227,6 +227,15 @@ main {
   font-family: var(--font-c); font-weight: 600; font-size: 28px; font-variant-numeric: tabular-nums;
 }
 .colon { font-family: var(--font-c); font-size: 26px; font-weight: 600; color: var(--muted); padding-bottom: 3px; }
+.ampm {
+  flex: none; height: 34px; min-width: 42px; margin-left: 4px; padding: 0 6px; border-radius: 8px;
+  background: var(--accent-soft); color: var(--accent-text); font-weight: 700; font-size: 14px; letter-spacing: 0.02em;
+}
+.ampm:active { opacity: 0.7; }
+.times.is12 { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+.tfield, .hm { min-width: 0; }
+.times.is12 .tsep { display: none; }
+.times.is12 .tin { width: 38px; font-size: 26px; }
 
 .calc {
   display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;
@@ -365,6 +374,10 @@ body.typing .bar { transform: translateY(110%); }
   .send-btn .send-txt { display: none; }
   .hours-box { min-width: 74px; padding: 5px 8px; }
   .rrow { grid-template-columns: minmax(0, 1fr) 100px 40px; }
+  .times.is12 .tin { width: 30px; font-size: 23px; }
+  .times.is12 .colon { font-size: 22px; }
+  .ampm { min-width: 34px; margin-left: 2px; padding: 0 4px; font-size: 13px; }
+  .rate-field .rl { font-size: 11px; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; scroll-behavior: auto !important; }
@@ -458,7 +471,7 @@ body.typing .bar { transform: translateY(110%); }
         <button type="button" class="seg-btn" data-clock="24h">24-hour</button>
       </div>
     </div>
-    <p class="hint">Times are always entered in 24-hour format (e.g. 17:30).</p>
+    <p class="hint">12-hour entry uses an AM/PM button; 24-hour entry uses 0–23 (e.g. 17:30).</p>
     <div>
       <span class="flabel">Appearance</span>
       <div class="seg seg3" id="themeSeg">
@@ -679,6 +692,8 @@ body.typing .bar { transform: translateY(110%); }
       date: raw.date,
       status: raw.status === 'worked' || raw.status === 'off' ? raw.status : undefined,
       sh: two(raw.sh), sm: two(raw.sm), eh: two(raw.eh), em: two(raw.em),
+      sap: raw.sap === 'AM' || raw.sap === 'PM' ? raw.sap : undefined,
+      eap: raw.eap === 'AM' || raw.eap === 'PM' ? raw.eap : undefined,
       site: str(raw.site, 300),
       notes: str(raw.notes),
       reimb: Array.isArray(raw.reimb) ? raw.reimb.filter(r => r && typeof r === 'object').map(r => ({
@@ -688,7 +703,7 @@ body.typing .bar { transform: translateY(110%); }
         desc: str(r.desc, 300)
       })) : []
     };
-    if (!d.status) delete d.status;
+    ['status', 'sap', 'eap'].forEach(k => { if (!d[k]) delete d[k]; });
     return d;
   }
   function normalizeSettings(raw) {
@@ -748,6 +763,21 @@ body.typing .bar { transform: translateY(110%); }
     return `${H % 12 || 12}:${pad2(M)} ${H < 12 ? 'AM' : 'PM'}`;
   }
   const fmtRange = d => `${fmtTime(d.sh, d.sm)} – ${fmtTime(d.eh, d.em)}`;
+
+  // AM/PM for the start ('s') or end ('e') time: derived from the stored 24h hour when set,
+  // otherwise the meridiem the user picked (defaults: start AM, end PM).
+  function apOf(d, w) {
+    const h = d && d[w + 'h'];
+    if (h !== '' && h != null) return Number(h) < 12 ? 'AM' : 'PM';
+    return (d && d[w + 'ap']) || (w === 's' ? 'AM' : 'PM');
+  }
+  const hour12To24 = (v, ap) => (v === '' || Number(v) === 0 ? '' : pad2(Number(v) % 12 + (ap === 'PM' ? 12 : 0)));
+
+  function rememberTimes(d) {
+    if (!shift(d)) return;
+    state.settings.lastTimes = { sh: d.sh, sm: d.sm || '00', eh: d.eh, em: d.em || '00' };
+    markSettings();
+  }
 
   function periodTotals(p = state.period) {
     const t = { mins: 0, wages: 0, reimb: 0, worked: 0, off: 0 };
@@ -934,14 +964,18 @@ body.typing .bar { transform: translateY(110%); }
     psub.textContent = `${p.half === 1 ? '1st' : '2nd'} half · ${periodDates(p).length} days · ${t.worked} worked`;
   }
 
-  function timeField(label, hf, mf, d) {
+  function timeField(label, w, d) {
+    const hf = w + 'h', mf = w + 'm';
+    const twelve = state.settings.clock === '12h';
+    const hv = twelve && d[hf] ? pad2(Number(d[hf]) % 12 || 12) : d[hf];
     const attrs = 'type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" autocomplete="off" enterkeyhint="next"';
     return `<div class="tfield">
       <span class="flabel">${label}</span>
       <div class="hm">
-        <input class="tin" data-f="${hf}" ${attrs} placeholder="HH" value="${esc(d[hf])}" aria-label="${label} hour (0–23)">
+        <input class="tin" data-f="${hf}" ${attrs} placeholder="HH" value="${esc(hv)}" aria-label="${label} hour (${twelve ? '1–12' : '0–23'})">
         <span class="colon" aria-hidden="true">:</span>
         <input class="tin" data-f="${mf}" ${attrs} placeholder="MM" value="${esc(d[mf])}" aria-label="${label} minute">
+        ${twelve ? `<button type="button" class="ampm" data-act="ampm" data-w="${w}" aria-label="${label} AM or PM, tap to switch">${apOf(d, w)}</button>` : ''}
       </div>
     </div>`;
   }
@@ -955,10 +989,10 @@ body.typing .bar { transform: translateY(110%); }
         <button type="button" class="seg-btn" data-act="status" data-v="off" aria-pressed="${st === 'off'}">Day off</button>
       </div>
       <div class="worked-only" style="display:flex;flex-direction:column;gap:14px"${st === 'worked' ? '' : ' hidden'}>
-        <div class="times">
-          ${timeField('Start', 'sh', 'sm', d)}
+        <div class="times${state.settings.clock === '12h' ? ' is12' : ''}">
+          ${timeField('Start', 's', d)}
           <div class="tsep" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg></div>
-          ${timeField('End', 'eh', 'em', d)}
+          ${timeField('End', 'e', d)}
         </div>
         <div class="calc" aria-live="polite"></div>
         <label class="field">
@@ -1008,7 +1042,9 @@ body.typing .bar { transform: translateY(110%); }
     const s = shift(d);
     if (!s) {
       el.className = 'calc empty';
-      el.textContent = 'Enter start and end time (24-hour, e.g. 09:00 → 17:30)';
+      el.textContent = state.settings.clock === '12h'
+        ? 'Enter start and end time — tap AM/PM to switch'
+        : 'Enter start and end time (24-hour, e.g. 09:00 → 17:30)';
       return;
     }
     const rate = getRate(periodIdOfDate(date));
@@ -1087,6 +1123,8 @@ body.typing .bar { transform: translateY(110%); }
   daysEl.addEventListener('click', e => {
     const card = e.target.closest('.card');
     if (!card) return;
+    // Tapping a time box selects it, so typing replaces the old value instead of being blocked by maxlength.
+    if (e.target.classList.contains('tin')) { if (e.target.value) e.target.select(); return; }
     const date = card.dataset.date;
 
     if (e.target.closest('.card-head')) {
@@ -1110,6 +1148,15 @@ body.typing .bar { transform: translateY(110%); }
       rerenderBody(date);
       afterChange(date);
       if (v === 'worked' && !shift(d)) { const f = $('[data-f="sh"]', card); if (f) f.focus(); }
+    } else if (act === 'ampm') {
+      const d = ensureDay(date);
+      const w = btn.dataset.w;
+      const ap = apOf(d, w) === 'AM' ? 'PM' : 'AM';
+      d[w + 'ap'] = ap;
+      if (d[w + 'h']) d[w + 'h'] = pad2(Number(d[w + 'h']) % 12 + (ap === 'PM' ? 12 : 0));
+      btn.textContent = ap;
+      rememberTimes(d);
+      afterChange(date);
     } else if (act === 'add-reimb') {
       const d = ensureDay(date);
       const r = { id: uid(), type: 'Cab', amount: '', desc: '' };
@@ -1145,24 +1192,27 @@ body.typing .bar { transform: translateY(110%); }
 
     if (f && TIME_FIELDS.includes(f)) {
       const isHour = f.endsWith('h');
+      const twelve = isHour && state.settings.clock === '12h';
       let v = inp.value.replace(/\D/g, '').slice(0, 2);
       // A single digit that can't start a valid 2-digit value is complete on its own.
-      if (v.length === 1 && Number(v) > (isHour ? 2 : 5)) v = '0' + v;
+      if (v.length === 1 && Number(v) > (twelve ? 1 : isHour ? 2 : 5)) v = '0' + v;
       if (v.length === 2) {
-        const max = isHour ? 23 : 59;
+        const max = twelve ? 12 : isHour ? 23 : 59;
         if (Number(v) > max) v = pad2(max);
+        if (twelve && v === '00') v = '12';
       }
       if (inp.value !== v) inp.value = v;
       const d = ensureDay(date);
-      d[f] = v;
+      if (twelve) {
+        const ap = apOf(d, f[0]);
+        d[f[0] + 'ap'] = ap;
+        d[f] = hour12To24(v, ap);
+      } else d[f] = v;
       if (isHour && v.length === 2) {
         const mf = f === 'sh' ? 'sm' : 'em';
         if (!d[mf]) d[mf] = '00';
       }
-      if (shift(d)) {
-        state.settings.lastTimes = { sh: d.sh, sm: d.sm || '00', eh: d.eh, em: d.em || '00' };
-        markSettings();
-      }
+      rememberTimes(d);
       if (v.length === 2) {
         const next = TIME_FIELDS[TIME_FIELDS.indexOf(f) + 1];
         const nextEl = next && $(`[data-f="${next}"]`, card);
@@ -1205,8 +1255,9 @@ body.typing .bar { transform: translateY(110%); }
     const d = getDay(date);
     if (!d) return;
     if (inp.value.length === 1) {
-      inp.value = pad2(inp.value);
-      d[f] = inp.value;
+      const twelve = f.endsWith('h') && state.settings.clock === '12h';
+      inp.value = twelve && inp.value === '0' ? '' : pad2(inp.value);
+      d[f] = twelve ? hour12To24(inp.value, apOf(d, f[0])) : inp.value;
       afterChange(date);
     }
     // Fill minutes with 00 once an hour is set
@@ -1327,7 +1378,7 @@ body.typing .bar { transform: translateY(110%); }
     markSettings();
     document.querySelectorAll('#clockSeg [data-clock]').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
     periodDates(state.period).forEach(refreshCardHead);
-    if (state.open) refreshCalc(state.open);
+    if (state.open) rerenderBody(state.open);
   });
   $('#themeSeg').addEventListener('click', e => {
     const b = e.target.closest('[data-theme-v]');
