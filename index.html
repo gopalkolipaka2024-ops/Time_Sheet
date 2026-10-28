@@ -190,7 +190,7 @@ main {
   display: inline-block; padding: 1px 7px; border-radius: 999px; font-size: 11px; font-weight: 600;
   letter-spacing: 0.02em; background: var(--accent-soft); color: var(--accent-text); white-space: nowrap;
 }
-.tag.off { background: var(--chip); color: var(--muted); }
+.tag.off { background: rgba(220, 38, 38, 0.12); color: var(--danger); }
 .hrs { text-align: right; white-space: nowrap; }
 .hval { font-family: var(--font-c); font-weight: 700; font-size: 22px; line-height: 1; font-variant-numeric: tabular-nums; }
 .hval small { margin-left: 2px; font-size: 13px; font-weight: 500; color: var(--muted); }
@@ -210,6 +210,7 @@ main {
 .seg-btn { height: 40px; border-radius: 10px; font-weight: 600; font-size: 15px; color: var(--muted); transition: background 0.15s, color 0.15s; }
 .seg-btn[aria-pressed="true"] { background: var(--surface); color: var(--text); box-shadow: 0 1px 3px rgba(16, 24, 40, 0.12); }
 .seg-btn.worked[aria-pressed="true"] { background: var(--accent); color: #fff; }
+.seg-btn.off[aria-pressed="true"] { background: #DC2626; color: #fff; }
 
 .flabel {
   display: block; margin-bottom: 6px; font-size: 12px; font-weight: 600;
@@ -301,8 +302,10 @@ body.typing .bar { transform: translateY(110%); }
 .lbl { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
 .hours-box {
   min-width: 86px; padding: 5px 12px 6px; text-align: center;
-  border: 1.5px solid var(--accent); border-radius: 12px; background: var(--surface);
+  border: 1.5px solid var(--accent); border-radius: 12px; background: var(--accent); color: #fff;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.25);
 }
+.hours-box .lbl { color: rgba(255, 255, 255, 0.85); }
 .hours-box .val { font-family: var(--font-c); font-weight: 700; font-size: 24px; line-height: 1.05; font-variant-numeric: tabular-nums; }
 .total { min-width: 0; }
 .total .val { font-family: var(--font-c); font-weight: 700; font-size: 27px; line-height: 1.05; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -436,7 +439,7 @@ body.typing .bar { transform: translateY(110%); }
       <div class="val" id="totHours">0.00</div>
     </div>
     <div class="total">
-      <div class="lbl">Total</div>
+      <div class="lbl"><span aria-hidden="true">💵</span> Total cash</div>
       <div class="val" id="totAmount">$0.00</div>
       <div class="tsub" id="totSub">0 days worked</div>
     </div>
@@ -986,7 +989,7 @@ body.typing .bar { transform: translateY(110%); }
     return `
       <div class="seg" role="group" aria-label="Day status">
         <button type="button" class="seg-btn worked" data-act="status" data-v="worked" aria-pressed="${st === 'worked'}">Worked</button>
-        <button type="button" class="seg-btn" data-act="status" data-v="off" aria-pressed="${st === 'off'}">Day off</button>
+        <button type="button" class="seg-btn off" data-act="status" data-v="off" aria-pressed="${st === 'off'}">Day off</button>
       </div>
       <div class="worked-only" style="display:flex;flex-direction:column;gap:14px"${st === 'worked' ? '' : ' hidden'}>
         <div class="times${state.settings.clock === '12h' ? ' is12' : ''}">
