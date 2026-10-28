@@ -1,0 +1,23 @@
+{
+  "name": "timesheet",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Free, no-login timesheet web app for iPhone and Android: hours, pay, sites, notes and reimbursements stored on the device.",
+  "homepage": "https://gopalkolipaka2024-ops.github.io/Time_Sheet/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gopalkolipaka2024-ops/Time_Sheet.git"
+  },
+  "scripts": {
+    "start": "node scripts/serve.js 8080",
+    "check": "node scripts/check.js",
+    "test": "node --test --test-concurrency=1 tests/app.test.js",
+    "icons": "node scripts/make-icons.js"
+  },
+  "devDependencies": {
+    "playwright": "1.63.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
