@@ -2,7 +2,7 @@
    The page itself always works without this file; it only adds offline support when hosted. */
 'use strict';
 
-const VERSION = '2.0.0';
+const VERSION = '2.1.0';
 const CACHE = `timesheet-${VERSION}`;
 const CORE = [
   './',

@@ -259,6 +259,62 @@ test('imports a backup from the previous version', async () => {
   await close(app);
 });
 
+test('view-only link opens like the app, cannot be edited and leaves the viewer’s data alone', async () => {
+  // Sender
+  const sender = await openApp();
+  await logShift(sender.page, 0, { brk: '30' });
+  await addReimbursement(sender.page, { newType: 'Train', emoji: '🚆', amount: '9.5', date: '2026-10-16', note: 'Metro' });
+  await sender.page.click('#sendBtn');
+  await sender.page.click('#shareMode [data-mode=link]');
+  await sender.page.waitForFunction(() => document.querySelector('#linkOpen').getAttribute('href').includes('#v='));
+  const link = await sender.page.getAttribute('#linkOpen', 'href');
+  assert.ok(link.startsWith(server.url), link);
+  await close(sender);
+
+  // Viewer: has their own timesheet on this phone
+  const viewer = await openApp();
+  const { page } = viewer;
+  await page.fill('#rateInput', '30');
+  await page.waitForTimeout(500);
+
+  const view = await viewer.ctx.newPage();
+  view.on('pageerror', e => viewer.errors.push(e.message));
+  await view.goto(link);
+  await view.waitForSelector('body.readonly #days .card');
+  assert.equal(await view.locator('#whoLabel').innerText(), 'Test Worker');
+  assert.equal(await view.locator('#periodMain').innerText(), 'Oct 16 – 31, 2026');
+  assert.equal(await view.locator('#totHours').innerText(), '8.00');
+  assert.equal(await view.inputValue('#rateInput'), '20.00');
+  assert.equal(await view.locator('#totAmount').innerText(), '$169.50');
+  assert.match(await view.locator('#roBanner').innerText(), /View-only timesheet from Test Worker/);
+  assert.match(await view.locator('#reimbList').innerText(), /🚆\s*Train/);
+  assert.equal(await view.locator('#welcomeOverlay.show').count(), 0);
+  for (const sel of ['#settingsBtn', '#sendBtn', '#addReimbBtn', '#prevBtn']) {
+    assert.equal(await view.locator(sel).isVisible(), false, `${sel} hidden`);
+  }
+  // Tap a day: details are shown, with no editing controls
+  await view.locator('.card').nth(0).locator('.card-head').click();
+  const body = view.locator('.card').nth(0).locator('.card-body');
+  assert.match(await body.innerText(), /8:00 AM – 4:30 PM/);
+  assert.match(await body.innerText(), /Metro/);
+  assert.equal(await body.locator('input, textarea, select, button').count(), 0);
+
+  // The viewer's own data is untouched
+  await view.goto(server.url);
+  await view.waitForSelector('#days .card');
+  assert.equal(await view.inputValue('#rateInput'), '30');
+  assert.equal(await view.locator('#totHours').innerText(), '0.00');
+  await close(viewer);
+});
+
+test('a damaged view link shows a friendly message', async () => {
+  const app = await openApp({ onboard: false });
+  const page = await app.ctx.newPage();
+  await page.goto(server.url + '#v=zNotARealLink');
+  await page.waitForSelector('text=This timesheet link is incomplete or damaged');
+  await app.ctx.close();
+});
+
 test('fits a 320px-wide phone without sideways scrolling', async () => {
   const app = await openApp({ viewport: { width: 320, height: 568 } });
   const { page } = app;

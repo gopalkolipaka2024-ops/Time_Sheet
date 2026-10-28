@@ -177,6 +177,7 @@ main {
   display: block; margin-top: 2px; font-family: var(--font-c); font-weight: 700; font-size: 18px; line-height: 1.1;
   font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
+.stat b.long { font-size: 15px; line-height: 1.32; }
 .strip { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 6px; }
 .dot {
   height: 30px; border-radius: 8px; background: var(--chip); color: var(--muted);
@@ -510,6 +511,26 @@ body.typing .bar { transform: translateY(110%); }
 .ss-preview summary { padding: 2px 0; color: var(--accent-text); font-size: 14px; font-weight: 600; cursor: pointer; }
 .ss-preview .preview { margin-top: 8px; background: var(--surface); }
 
+/* View-only (shared link) mode */
+body.readonly #settingsBtn, body.readonly .pnav, body.readonly #addReimbBtn,
+body.readonly #sendBtn, body.readonly #todayBtn, body.readonly #installHint, body.readonly #setupNotice { display: none !important; }
+body.readonly .rate-field input { pointer-events: none; }
+.ro-banner { background: var(--chip); }
+.get-app {
+  height: 52px; padding: 0 18px; border-radius: 14px; background: var(--accent); color: #fff; text-decoration: none;
+  display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 16px; white-space: nowrap;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
+}
+.ro-list { margin: 0; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px 16px; font-size: 15px; }
+.ro-list dt { color: var(--muted); font-weight: 500; white-space: nowrap; }
+.ro-list dd { margin: 0; text-align: right; font-weight: 600; overflow-wrap: anywhere; }
+.ro-list dd .muted { color: var(--muted); font-weight: 400; font-size: 14px; }
+.ro-empty { margin: 0; color: var(--muted); font-size: 14px; text-align: center; }
+.link-card { display: flex; gap: 12px; align-items: flex-start; padding: 14px; border-radius: 14px; background: var(--surface); }
+.link-card .big { font-size: 28px; line-height: 1; }
+.link-card b { display: block; font-size: 16px; }
+.link-card p { margin: 4px 0 0; font-size: 14px; color: var(--muted); }
+
 /* Toast */
 .toast {
   position: fixed; left: 50%; z-index: 60; bottom: calc(var(--bar-h) + env(safe-area-inset-bottom) + 14px);
@@ -585,6 +606,11 @@ body.typing .bar { transform: translateY(110%); }
     </button>
   </div>
 
+  <div class="notice ro-banner" id="roBanner" hidden>
+    <span aria-hidden="true" style="font-size:20px">👀</span>
+    <span class="grow" id="roText">View-only timesheet</span>
+  </div>
+
   <section class="panel" aria-label="Period summary">
     <div class="meta-row">
       <label class="rate-field">
@@ -637,6 +663,7 @@ body.typing .bar { transform: translateY(110%); }
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 8 5-5 5 5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>
       <span class="send-txt">Send</span>
     </button>
+    <a class="get-app" id="getAppBtn" href="./" hidden>📲 Get app</a>
   </div>
 </footer>
 
@@ -823,9 +850,10 @@ body.typing .bar { transform: translateY(110%); }
       </div>
       <button class="ss-close" type="button" data-close aria-label="Close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
     </div>
-    <div class="seg" id="shareMode" role="group" aria-label="What to share">
+    <div class="seg seg3" id="shareMode" role="group" aria-label="What to share">
       <button type="button" class="seg-btn" data-mode="message" aria-pressed="true">💬 Message</button>
-      <button type="button" class="seg-btn" data-mode="page" aria-pressed="false">📄 Page</button>
+      <button type="button" class="seg-btn" data-mode="link" aria-pressed="false">🔗 View link</button>
+      <button type="button" class="seg-btn" data-mode="page" aria-pressed="false">📄 Image</button>
     </div>
     <div class="share-panel" id="panelMessage">
       <div class="ss-apps">
@@ -857,6 +885,44 @@ body.typing .bar { transform: translateY(110%); }
         <pre class="preview" id="sharePreview"></pre>
       </details>
     </div>
+    <div class="share-panel" id="panelLink" hidden>
+      <div class="link-card">
+        <span class="big" aria-hidden="true">👀</span>
+        <div>
+          <b>View-only link</b>
+          <p>Opens like the app: they can scroll and tap days, but can’t change anything. Your timesheet travels inside the link — nothing is uploaded.</p>
+        </div>
+      </div>
+      <div class="ss-apps">
+        <a class="ss-app" id="linkWhatsApp" href="#" target="_blank" rel="noopener">
+          <span class="app-ic ic-wa" aria-hidden="true"><svg width="34" height="34" viewBox="0 0 24 24" fill="#fff"><path d="M12.05 21.79h-.01a9.87 9.87 0 0 1-5.03-1.38l-.36-.21-3.74.98 1-3.65-.24-.37a9.86 9.86 0 0 1-1.51-5.26c0-5.45 4.44-9.88 9.89-9.88 2.64 0 5.12 1.03 6.99 2.9a9.83 9.83 0 0 1 2.89 6.99c0 5.45-4.44 9.88-9.89 9.88zm8.41-18.3A11.82 11.82 0 0 0 12.05 0C5.5 0 .16 5.34.16 11.89c0 2.1.55 4.14 1.59 5.95L.06 24l6.3-1.65a11.88 11.88 0 0 0 5.68 1.45h.01c6.55 0 11.89-5.34 11.89-11.89 0-3.18-1.24-6.16-3.48-8.41z"/><path d="M17.47 14.38c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.16-.17.2-.35.22-.64.07-.3-.15-1.26-.46-2.39-1.47-.88-.79-1.48-1.76-1.65-2.06-.17-.3-.02-.46.13-.6.13-.14.3-.35.45-.52.15-.18.2-.3.3-.5.1-.2.05-.37-.03-.52-.07-.15-.67-1.61-.91-2.2-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.79.37-.27.3-1.04 1.02-1.04 2.48s1.06 2.88 1.21 3.07c.15.2 2.1 3.2 5.08 4.49.71.31 1.26.49 1.7.63.71.22 1.36.19 1.87.12.57-.09 1.76-.72 2-1.41.25-.7.25-1.29.18-1.41-.08-.13-.27-.2-.57-.35z"/></svg></span>
+          WhatsApp
+        </a>
+        <a class="ss-app" id="linkSMS" href="#" target="_blank" rel="noopener">
+          <span class="app-ic ic-msg" aria-hidden="true"><svg width="36" height="36" viewBox="0 0 24 24" fill="#fff"><path d="M12 3.2c-5.4 0-9.8 3.7-9.8 8.3 0 2.5 1.3 4.8 3.4 6.3-.15 1.25-.7 2.4-1.5 3.3 1.95-.05 3.65-.7 4.9-1.65 1 .28 1.95.4 3 .4 5.4 0 9.8-3.7 9.8-8.3S17.4 3.2 12 3.2z"/></svg></span>
+          Messages
+        </a>
+        <a class="ss-app" id="linkEmail" href="#" target="_blank" rel="noopener">
+          <span class="app-ic ic-mail" aria-hidden="true"><svg width="38" height="38" viewBox="0 0 24 24"><rect x="2.5" y="5.5" width="19" height="13" rx="2.2" fill="#fff"/><path d="M3.4 6.6 12 13l8.6-6.4" fill="none" stroke="#2C8BF7" stroke-width="1.4" stroke-linejoin="round"/></svg></span>
+          Mail
+        </a>
+        <button class="ss-app" id="linkMore" type="button" hidden>
+          <span class="app-ic ic-more" aria-hidden="true"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 8 5-5 5 5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg></span>
+          More
+        </button>
+      </div>
+      <div class="ss-actions">
+        <button class="ss-row" id="linkCopy" type="button">
+          Copy link
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        </button>
+        <a class="ss-row" id="linkOpen" href="#" target="_blank" rel="noopener" style="color:inherit;text-decoration:none">
+          Preview what they’ll see
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7"/><path d="M7 7h10v10"/></svg>
+        </a>
+      </div>
+      <p class="hint" style="margin:0" id="linkStatus">Preparing link…</p>
+    </div>
     <div class="share-panel" id="panelPage" hidden>
       <div class="page-preview" id="pagePreview"><div class="page-loading">Preparing page…</div></div>
       <div class="ss-actions">
@@ -881,7 +947,7 @@ body.typing .bar { transform: translateY(110%); }
   'use strict';
 
   /* ---------- App info ---------- */
-  const APP_VERSION = '2.0.0';
+  const APP_VERSION = '2.1.0';
   const APP_URL = 'https://gopalkolipaka2024-ops.github.io/Time_Sheet/';
   const REPO_URL = 'https://github.com/gopalkolipaka2024-ops/Time_Sheet';
 
@@ -1064,6 +1130,9 @@ body.typing .bar { transform: translateY(110%); }
     period: null,
     open: null
   };
+  // View-only mode: opened from a shared link. Nothing is saved and nothing can be edited.
+  let readOnly = false;
+  let viewRate = null;
 
   /* ---------- Pay periods ---------- */
   const daysInMonth = (y, m) => new Date(y, m + 1, 0).getDate();
@@ -1193,7 +1262,7 @@ body.typing .bar { transform: translateY(110%); }
     const pr = state.settings.periodRates;
     return pr[pid] != null ? pr[pid] : (state.settings.rate || '');
   }
-  const getRate = pid => Math.max(0, num(rateString(pid)));
+  const getRate = pid => (viewRate != null ? viewRate : Math.max(0, num(rateString(pid))));
 
   const catById = id => state.settings.categories.find(c => c.id === id);
   // Current emoji/name for an item: follows its category (so renames apply), else the saved snapshot.
@@ -1278,6 +1347,7 @@ body.typing .bar { transform: translateY(110%); }
   let saveTimer = null;
 
   function markDay(date) {
+    if (readOnly) return;
     // Lock in the rate for a period as soon as it has data, so changing the default later
     // doesn't silently re-price past periods.
     const pid = periodIdOfDate(date);
@@ -1288,12 +1358,13 @@ body.typing .bar { transform: translateY(110%); }
     dirtyDays.add(date);
     scheduleSave();
   }
-  function markSettings() { settingsDirty = true; scheduleSave(); }
+  function markSettings() { if (readOnly) return; settingsDirty = true; scheduleSave(); }
   function scheduleSave() { clearTimeout(saveTimer); saveTimer = setTimeout(flush, 300); }
 
   async function flush() {
     clearTimeout(saveTimer);
     saveTimer = null;
+    if (readOnly) return;
     if (!dirtyDays.size && !settingsDirty) return;
     const put = [], del = [];
     dirtyDays.forEach(k => {
@@ -1318,7 +1389,7 @@ body.typing .bar { transform: translateY(110%); }
   const isStandalone = window.navigator.standalone === true ||
     (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-  const appLink = () => (isHosted && !/^(localhost|127\.)/.test(location.hostname) ? location.origin + location.pathname : APP_URL);
+  const appLink = () => (isHosted ? location.origin + location.pathname : APP_URL);
 
   /* ---------- Theme & icon ---------- */
   function applyTheme() {
@@ -1387,7 +1458,7 @@ body.typing .bar { transform: translateY(110%); }
     $('#setupNotice').hidden = !!state.settings.name || !state.settings.onboarded;
     $('#rateCur').textContent = curSymbol;
     const rateIn = $('#rateInput');
-    if (document.activeElement !== rateIn) rateIn.value = rateString(periodId(p));
+    if (document.activeElement !== rateIn) rateIn.value = viewRate != null ? viewRate.toFixed(2) : rateString(periodId(p));
     $('#todayBtn').hidden = samePeriod(p, periodOf(todayISO()));
   }
 
@@ -1468,7 +1539,9 @@ body.typing .bar { transform: translateY(110%); }
     const items = periodReimbItems();
     const list = $('#reimbList');
     if (!items.length) {
-      list.innerHTML = '<div class="r-empty">No reimbursements yet. Tap <b>+ Add</b> for 🚕 cab, 🍔 meals, 🅿️ parking or your own types.</div>';
+      list.innerHTML = readOnly
+        ? '<div class="r-empty">No reimbursements in this period.</div>'
+        : '<div class="r-empty">No reimbursements yet. Tap <b>+ Add</b> for 🚕 cab, 🍔 meals, 🅿️ parking or your own types.</div>';
       $('#reimbFoot').hidden = true;
       return;
     }
@@ -1497,8 +1570,11 @@ body.typing .bar { transform: translateY(110%); }
     $('#totSub').textContent = bits.join(' · ');
     $('#stWorked').textContent = t.worked;
     $('#stOff').textContent = t.off;
-    $('#stWages').textContent = fmt$(t.wages);
-    $('#stReimb').textContent = fmt$(t.reimb);
+    [['#stWages', t.wages], ['#stReimb', t.reimb]].forEach(([sel, v]) => {
+      const el = $(sel);
+      el.textContent = fmt$(v);
+      el.classList.toggle('long', el.textContent.length > 8); // e.g. $1,620.00 needs a smaller size
+    });
     renderReimbPanel();
   }
 
@@ -1615,6 +1691,30 @@ body.typing .bar { transform: translateY(110%); }
         : '<span class="warn">Set hourly rate above</span>'}</div>`;
   }
 
+  // Read-only details for a day (shared view link).
+  function viewBodyHTML(date) {
+    const d = getDay(date);
+    if (!d || isEmptyDay(d)) return '<p class="ro-empty">No entry for this day.</p>';
+    const rows = [];
+    const add = (k, v) => rows.push(`<dt>${k}</dt><dd>${v}</dd>`);
+    const s = d.status === 'worked' ? shift(d) : null;
+    if (d.status === 'worked') add('Status', '<span class="tag">Worked</span>');
+    if (d.status === 'off') add('Status', '<span class="tag off">Day off</span>');
+    if (s) {
+      add('Shift', esc(fmtRange(d)) + (s.overnight ? ' <span class="tag">+1 day</span>' : ''));
+      if (s.brk) add('☕ Unpaid break', fmtBreak(s.brk));
+      add('Hours', `${fmtH(s.mins / 60)} hrs`);
+      add('Pay', esc(fmt$(dayPay(d))));
+    }
+    if (d.site) add('📍 Site', esc(d.site));
+    if (d.notes) add('📝 Notes', esc(d.notes).replace(/\n/g, '<br>'));
+    (d.reimb || []).forEach(r => {
+      const c = catInfo(r);
+      add(`${esc(c.emoji)} ${esc(c.name)}`, `${esc(fmt$(num(r.amount)))}${r.desc ? `<br><span class="muted">${esc(r.desc)}</span>` : ''}`);
+    });
+    return `<dl class="ro-list">${rows.join('')}</dl>`;
+  }
+
   function autoGrow(ta) {
     ta.style.height = 'auto';
     ta.style.height = Math.min(ta.scrollHeight + 2, 240) + 'px';
@@ -1624,7 +1724,7 @@ body.typing .bar { transform: translateY(110%); }
     const card = cardEl(date);
     if (!card) return;
     const body = $('.card-body', card);
-    body.innerHTML = bodyHTML(date);
+    body.innerHTML = readOnly ? viewBodyHTML(date) : bodyHTML(date);
     renderReimb(date);
     refreshCalc(date);
     body.hidden = false;
@@ -1652,7 +1752,7 @@ body.typing .bar { transform: translateY(110%); }
 
   function rerenderBody(date) {
     const card = cardEl(date);
-    if (!card || state.open !== date) return;
+    if (!card || state.open !== date || readOnly) return;
     const body = $('.card-body', card);
     body.innerHTML = bodyHTML(date);
     renderReimb(date);
@@ -2282,7 +2382,13 @@ body.typing .bar { transform: translateY(110%); }
   $('#addReimbBtn').addEventListener('click', () => openReimbSheet(null, null));
   $('#reimbList').addEventListener('click', e => {
     const row = e.target.closest('.ritem');
-    if (row) openReimbSheet(row.dataset.date, row.dataset.rid);
+    if (!row) return;
+    if (readOnly) {
+      if (state.open && state.open !== row.dataset.date) closeCard(state.open);
+      if (state.open !== row.dataset.date) openCard(row.dataset.date);
+      return;
+    }
+    openReimbSheet(row.dataset.date, row.dataset.rid);
   });
   $('#rCatGrid').addEventListener('click', e => {
     if (e.target.closest('[data-newcat]')) {
@@ -2685,6 +2791,7 @@ body.typing .bar { transform: translateY(110%); }
     shareMode = mode;
     document.querySelectorAll('#shareMode [data-mode]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.mode === mode)));
     $('#panelMessage').hidden = mode !== 'message';
+    $('#panelLink').hidden = mode !== 'link';
     $('#panelPage').hidden = mode !== 'page';
   }
   $('#shareMode').addEventListener('click', e => {
@@ -2731,10 +2838,145 @@ body.typing .bar { transform: translateY(110%); }
     $('#shareSMS').href = `sms:&body=${enc(text)}`;
     $('#shareEmail').href = `mailto:?subject=${enc(title)}&body=${enc(text)}`;
     $('#shareMore').hidden = !(navigator.share && !isFramed);
+    $('#linkMore').hidden = !(navigator.share && !isFramed);
     setShareMode(shareMode);
     openSheet('shareOverlay');
+    prepareViewLink(totals);
     preparePageImage();
   });
+
+  /* ---------- View-only link ---------- */
+  // The period's data is compressed into the link's #fragment, which browsers never send to a server.
+  const b64url = bytes => {
+    let bin = '';
+    for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+    return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  };
+  const fromB64url = str => {
+    str = str.replace(/-/g, '+').replace(/_/g, '/');
+    while (str.length % 4) str += '=';
+    return Uint8Array.from(atob(str), c => c.charCodeAt(0));
+  };
+  const pipeBytes = async (bytes, stream) => new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(stream)).arrayBuffer());
+
+  async function encodeView(obj) {
+    const raw = new TextEncoder().encode(JSON.stringify(obj));
+    if (window.CompressionStream) {
+      try { return 'z' + b64url(await pipeBytes(raw, new CompressionStream('deflate-raw'))); } catch (e) { /* plain below */ }
+    }
+    return 'j' + b64url(raw);
+  }
+  async function decodeView(code) {
+    const bytes = fromB64url(code.slice(1));
+    let raw = bytes;
+    if (code[0] === 'z') {
+      if (!window.DecompressionStream) throw new Error('This browser is too old to open the link');
+      raw = await pipeBytes(bytes, new DecompressionStream('deflate-raw'));
+    } else if (code[0] !== 'j') throw new Error('Unknown link format');
+    return JSON.parse(new TextDecoder().decode(raw));
+  }
+
+  function buildViewPayload() {
+    const p = state.period;
+    const days = periodDates(p).map(getDay).filter(d => d && !isEmptyDay(d)).map(d => [
+      d.date,
+      d.status === 'worked' ? 'w' : d.status === 'off' ? 'o' : '',
+      d.sh || '', d.sm || '', d.eh || '', d.em || '',
+      Math.round(num(d.brk)),
+      d.site || '', d.notes || '',
+      (d.reimb || []).filter(r => num(r.amount) > 0).map(r => { const c = catInfo(r); return [c.emoji, c.name, r.amount, r.desc || '']; })
+    ]);
+    return {
+      v: 1, n: state.settings.name || '', cur: state.settings.currency, clk: state.settings.clock,
+      p: [p.type, p.start, p.end], r: getRate(periodId(p)), g: new Date().toISOString(), d: days
+    };
+  }
+
+  let viewUrl = '';
+  let viewMsg = '';
+  let linkJob = 0;
+  async function prepareViewLink(totals) {
+    const job = ++linkJob;
+    viewUrl = '';
+    $('#linkStatus').textContent = 'Preparing link…';
+    try {
+      const url = `${appLink()}#v=${await encodeView(buildViewPayload())}`;
+      if (job !== linkJob) return;
+      viewUrl = url;
+      viewMsg = `🕒 ${shareTitleText}\n💵 Total: ${fmt$(totals.total)}\n👀 View it here (read-only): ${url}`;
+      const enc = encodeURIComponent;
+      $('#linkWhatsApp').href = `https://wa.me/?text=${enc(viewMsg)}`;
+      $('#linkSMS').href = `sms:&body=${enc(viewMsg)}`;
+      $('#linkEmail').href = `mailto:?subject=${enc(shareTitleText)}&body=${enc(viewMsg)}`;
+      $('#linkOpen').href = url;
+      $('#linkStatus').textContent = 'The link shows this period only. Send a new link if you make changes.';
+    } catch (err) {
+      console.error(err);
+      if (job === linkJob) $('#linkStatus').textContent = 'Couldn’t create the link on this device.';
+    }
+  }
+  const linkReady = () => { if (!viewUrl) toast('Still preparing the link…'); return !!viewUrl; };
+  ['#linkWhatsApp', '#linkSMS', '#linkEmail', '#linkOpen'].forEach(sel => {
+    $(sel).addEventListener('click', e => { if (!linkReady()) e.preventDefault(); });
+  });
+  $('#linkMore').addEventListener('click', async () => {
+    if (!linkReady()) return;
+    try { await navigator.share({ title: shareTitleText, text: `🕒 ${shareTitleText} (read-only)`, url: viewUrl }); }
+    catch (e) { if (!e || e.name !== 'AbortError') toast('Sharing isn’t available here'); }
+  });
+  $('#linkCopy').addEventListener('click', async () => {
+    if (!linkReady()) return;
+    toast((await copyText(viewUrl)) ? 'View-only link copied 🔗' : 'Copy failed');
+  });
+
+  // Open a shared link: load its data into memory only, never into this device's saved timesheet.
+  function loadViewPayload(o) {
+    const isDate = v => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v);
+    if (!o || o.v !== 1 || !Array.isArray(o.p) || !Array.isArray(o.d)) throw new Error('Invalid link');
+    const [type, start, end] = o.p;
+    if (!PERIOD_TYPES.some(([t]) => t === type) || !isDate(start) || !isDate(end) || end < start || dayDiff(end, start) > 31) throw new Error('Invalid period');
+    state.settings = normalizeSettings({ name: o.n, currency: o.cur, clock: o.clk, periodType: type, onboarded: true, installHintDismissed: true });
+    state.settings.categories = []; // keep the sender's own emoji and type names
+    viewRate = Math.max(0, num(o.r));
+    state.period = { type, start, end };
+    state.days = {};
+    o.d.forEach(row => {
+      if (!Array.isArray(row)) return;
+      const [date, st, sh, sm, eh, em, brk, site, notes, re] = row;
+      const d = normalizeDay({
+        date, status: st === 'w' ? 'worked' : st === 'o' ? 'off' : undefined, sh, sm, eh, em, brk, site, notes,
+        reimb: (Array.isArray(re) ? re : []).filter(Array.isArray).map((x, i) => ({ id: `v${i}`, emoji: x[0], type: x[1], amount: x[2], desc: x[3] }))
+      });
+      if (d && d.date >= start && d.date <= end) state.days[d.date] = d;
+    });
+    return o;
+  }
+
+  async function bootViewer(code) {
+    readOnly = true;
+    document.body.classList.add('readonly');
+    $('#rateInput').readOnly = true;
+    $('#getAppBtn').hidden = false;
+    $('#getAppBtn').href = location.origin + location.pathname;
+    let o;
+    try { o = loadViewPayload(await decodeView(code)); }
+    catch (err) {
+      console.error(err);
+      $('#main').innerHTML = '<section class="panel"><p class="ro-empty" style="padding:24px 8px">⚠️ This timesheet link is incomplete or damaged.<br>Ask the sender to share it again.</p></section>';
+      $('#bar').hidden = true;
+      return;
+    }
+    setMoney(state.settings.currency);
+    applyTheme();
+    render();
+    const g = o.g && !isNaN(Date.parse(o.g)) ? new Date(o.g) : null;
+    $('#roText').textContent = `View-only timesheet${state.settings.name ? ' from ' + state.settings.name : ''}` +
+      (g ? ` · shared ${MONTHS[g.getMonth()]} ${g.getDate()}` : '') + '. Nothing here can be changed.';
+    $('#roBanner').hidden = false;
+    document.title = `Timesheet${state.settings.name ? ' – ' + state.settings.name : ''} – ${periodLabel(state.period)}`;
+    setHeaderH();
+  }
+  window.addEventListener('hashchange', () => location.reload());
 
   $('#shareMore').addEventListener('click', async () => {
     try { await navigator.share({ title: shareTitleText, text: shareText }); }
@@ -2765,7 +3007,7 @@ body.typing .bar { transform: translateY(110%); }
   /* ---------- Install hint (hosted app, not yet installed) ---------- */
   let installPrompt = null;
   function updateInstallHint() {
-    const show = isHosted && !isStandalone && !state.settings.installHintDismissed && (isIOS || installPrompt);
+    const show = !readOnly && isHosted && !isStandalone && !state.settings.installHintDismissed && (isIOS || installPrompt);
     $('#installHint').hidden = !show;
     $('#installBtn').hidden = !installPrompt;
     if (installPrompt) $('#installText').innerHTML = 'Install <b>Timesheet</b> on this phone for quick access.';
@@ -2809,7 +3051,7 @@ body.typing .bar { transform: translateY(110%); }
   // Save on background / close
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'hidden') flush();
-    else { // day may have rolled over while backgrounded
+    else if (state.period && document.contains(daysEl)) { // day may have rolled over while backgrounded
       renderHeader();
       periodDates(state.period).forEach(date => {
         const c = cardEl(date);
@@ -2823,6 +3065,8 @@ body.typing .bar { transform: translateY(110%); }
   /* ---------- Boot ---------- */
   async function boot() {
     makeTouchIcon();
+    const viewCode = (location.hash.match(/^#v=([\w-]+)$/) || [])[1];
+    if (viewCode) { await bootViewer(viewCode); return; }
     await Store.init();
     let hasData = false;
     try {

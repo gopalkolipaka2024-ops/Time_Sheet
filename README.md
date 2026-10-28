@@ -18,8 +18,9 @@ enter stays on your own phone.
 - 📍 **Site and notes.** Add the job site and any notes for each day.
 - 🧾 **Reimbursements.** Add as many as you need: 🚕 Cab, 🍔 Meals, 🅿️ Parking, ⛽ Fuel, or your own types.
 - 📅 **Pay periods.** Half-monthly (1–15 and 16–end of month) by default, or weekly, bi-weekly or monthly.
-- 📤 **Send.** Share the timesheet as a 💬 text message or as a 📄 page image, with every day, every
-  reimbursement and the 💵 grand total.
+- 📤 **Send.** Share the timesheet as a 💬 text message, a 📄 page image, or a 🔗 **view-only link**. The
+  link opens like the app (scroll, tap days for details) but can't be edited. Each option includes every
+  day, every reimbursement and the 💵 grand total.
 - 🌙 **Light and dark mode**, and it works offline once installed.
 
 ## 📲 Install it on your phone
@@ -40,6 +41,9 @@ The app then opens full-screen from your Home Screen like any other app.
 - There are **no accounts and no logins**, and nothing is sent to a server.
 - Your hours and amounts are saved **only on your phone**, in the browser's storage.
 - Each person who uses the app has their own separate data.
+- A **view-only link** carries that period's timesheet inside the link itself (after the `#`, a part
+  of a web address that browsers never send to a server). Anyone you give the link to can read it,
+  so share it only with the people who should see it.
 - **Back up** before changing phones or clearing your browser: **Settings → Data → Export backup**.
   On the new phone, use **Import backup**.
 

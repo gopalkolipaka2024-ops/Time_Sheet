@@ -4,6 +4,15 @@ All notable changes to Timesheet. Versions follow [semantic versioning](https://
 the app version lives in `package.json`, `index.html` (`APP_VERSION`) and `sw.js` (`VERSION`), and
 `npm run check` fails if they differ.
 
+## 2.1.0 — 2026-10-28
+
+### Added
+- 🔗 **View-only link** (Send → View link). The other person opens your timesheet just like the app:
+  they can scroll, see the summary and reimbursements, and tap days for details, but nothing can be
+  edited. The period's data travels inside the link (in the part after `#`, which is never sent to a
+  server). Opening a link never touches the viewer's own saved timesheet.
+- The share sheet now offers 💬 Message, 🔗 View link and 📄 Image.
+
 ## 2.0.0 — 2026-10-28
 
 ### Added
