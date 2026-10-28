@@ -397,6 +397,15 @@ body.typing .bar { transform: translateY(110%); }
 .ss-actions { background: var(--surface); border-radius: 12px; overflow: hidden; }
 .ss-row { width: 100%; min-height: 52px; padding: 0 16px; display: flex; align-items: center; justify-content: space-between; font-size: 16px; text-align: left; }
 .ss-row:active { background: var(--press); }
+.share-panel { display: flex; flex-direction: column; gap: 16px; }
+.page-preview {
+  max-height: 44vh; max-height: 44dvh; overflow-y: auto; -webkit-overflow-scrolling: touch;
+  border: 1px solid var(--border); border-radius: 12px; background: #F7F8FA;
+}
+.page-preview img { display: block; width: 100%; height: auto; -webkit-touch-callout: default; }
+.page-loading { padding: 40px 16px; text-align: center; color: #667085; font-size: 14px; }
+.ss-row + .ss-row { border-top: 1px solid var(--border); }
+.ss-row.primary { color: var(--accent-text); font-weight: 600; }
 .ss-preview summary { padding: 2px 0; color: var(--accent-text); font-size: 14px; font-weight: 600; cursor: pointer; }
 .ss-preview .preview { margin-top: 8px; background: var(--surface); }
 
@@ -562,6 +571,11 @@ body.typing .bar { transform: translateY(110%); }
       </div>
       <button class="ss-close" type="button" data-close aria-label="Close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
     </div>
+    <div class="seg" id="shareMode" role="group" aria-label="What to share">
+      <button type="button" class="seg-btn" data-mode="message" aria-pressed="true">Message</button>
+      <button type="button" class="seg-btn" data-mode="page" aria-pressed="false">Page</button>
+    </div>
+    <div class="share-panel" id="panelMessage">
     <div class="ss-apps">
       <a class="ss-app" id="shareWhatsApp" href="#" target="_blank" rel="noopener">
         <span class="app-ic ic-wa" aria-hidden="true"><svg width="34" height="34" viewBox="0 0 24 24" fill="#fff"><path d="M17.47 14.38c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.16-.17.2-.35.22-.64.07-.3-.15-1.26-.46-2.39-1.47-.88-.79-1.48-1.76-1.65-2.06-.17-.3-.02-.46.13-.6.13-.14.3-.35.45-.52.15-.18.2-.3.3-.5.1-.2.05-.37-.03-.52-.07-.15-.67-1.61-.91-2.2-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.79.37-.27.3-1.04 1.02-1.04 2.48s1.06 2.88 1.21 3.07c.15.2 2.1 3.2 5.08 4.49.71.31 1.26.49 1.7.63.71.22 1.36.19 1.87.12.57-.09 1.76-.72 2-1.41.25-.7.25-1.29.18-1.41-.08-.13-.27-.2-.57-.35zM12.05 21.79h-.01a9.87 9.87 0 0 1-5.03-1.38l-.36-.21-3.74.98 1-3.65-.24-.37a9.86 9.86 0 0 1-1.51-5.26c0-5.45 4.44-9.88 9.89-9.88 2.64 0 5.12 1.03 6.99 2.9a9.83 9.83 0 0 1 2.89 6.99c0 5.45-4.44 9.88-9.89 9.88zm8.41-18.3A11.82 11.82 0 0 0 12.05 0C5.5 0 .16 5.34.16 11.89c0 2.1.55 4.14 1.59 5.95L.06 24l6.3-1.65a11.88 11.88 0 0 0 5.68 1.45h.01c6.55 0 11.89-5.34 11.89-11.89 0-3.18-1.24-6.16-3.48-8.41z"/></svg></span>
@@ -576,7 +590,7 @@ body.typing .bar { transform: translateY(110%); }
         Mail
       </a>
       <button class="ss-app" id="shareMore" type="button" hidden>
-        <span class="app-ic ic-more" aria-hidden="true"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></span>
+        <span class="app-ic ic-more" aria-hidden="true"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 8 5-5 5 5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg></span>
         More
       </button>
     </div>
@@ -590,6 +604,21 @@ body.typing .bar { transform: translateY(110%); }
       <summary>Preview message</summary>
       <pre class="preview" id="sharePreview"></pre>
     </details>
+    </div>
+    <div class="share-panel" id="panelPage" hidden>
+      <div class="page-preview" id="pagePreview"><div class="page-loading">Preparing page…</div></div>
+      <div class="ss-actions">
+        <button class="ss-row primary" id="pageShare" type="button">
+          Share page
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 8 5-5 5 5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>
+        </button>
+        <button class="ss-row" id="pageCopy" type="button">
+          Copy image
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        </button>
+      </div>
+      <p class="hint" style="margin:0">Tip: press and hold the image to save or share it.</p>
+    </div>
   </div>
 </div>
 
@@ -1530,23 +1559,9 @@ body.typing .bar { transform: translateY(110%); }
     };
     const json = JSON.stringify(data, null, 2);
     const name = `timesheet-backup-${todayISO()}.json`;
-    try {
-      const file = new File([json], name, { type: 'application/json' });
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({ files: [file], title: 'Timesheet backup' });
-        return;
-      }
-    } catch (e) {
-      if (e && e.name === 'AbortError') return;
-    }
-    const url = URL.createObjectURL(new Blob([json], { type: 'application/json' }));
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = name;
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 1500);
-    toast('Backup exported');
+    const blob = new Blob([json], { type: 'application/json' });
+    const res = await shareOrSaveFile(name, blob, 'Timesheet backup');
+    if (res === 'saved') toast('Backup exported');
   });
 
   $('#importBtn').addEventListener('click', () => $('#importFile').click());
@@ -1637,46 +1652,354 @@ body.typing .bar { transform: translateY(110%); }
     return { text: L.join('\n'), title: `Timesheet – ${periodLabel(p)}${state.settings.name ? ' – ' + state.settings.name.trim() : ''}`, totals: t };
   }
 
-  $('#sendBtn').addEventListener('click', async () => {
-    flush(); // don't await: keep the user-gesture for navigator.share on iOS
+  /* ---------- File sharing / saving ---------- */
+  // Inside claude.ai the page is framed: the system share sheet is blocked there, but the
+  // platform's downloads capability can save files (and hands them to the iOS share sheet in the Claude app).
+  const isFramed = (() => { try { return window.self !== window.top; } catch (e) { return true; } })();
+  const downloadsReady = window.claude && typeof window.claude.use === 'function'
+    ? window.claude.use('downloads').catch(() => null)
+    : Promise.resolve(null);
+
+  async function shareOrSaveFile(filename, blob, title) {
+    if (!isFramed && navigator.canShare && navigator.share) {
+      const file = new File([blob], filename, { type: blob.type });
+      if (navigator.canShare({ files: [file] })) {
+        try { await navigator.share({ files: [file], title }); return 'shared'; }
+        catch (e) { if (e && e.name === 'AbortError') return 'cancelled'; }
+      }
+    }
+    const downloads = await downloadsReady;
+    if (downloads) {
+      try { await downloads.save({ filename, data: blob }); return 'saved'; }
+      catch (e) {
+        if (e && e.code === 'declined') return 'cancelled';
+        if (e && e.code === 'rate_limited') { toast('Please wait a moment and try again'); return 'cancelled'; }
+      }
+    }
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 1500);
+    return 'saved';
+  }
+
+  /* ---------- Page image (the timesheet drawn like the app) ---------- */
+  const PAGE_W = 390;
+  const IMG = {
+    bg: '#F7F8FA', surface: '#FFFFFF', chip: '#F1F3F6', border: '#E4E7EC', text: '#0F172A', muted: '#667085',
+    accent: '#2563EB', accentSoft: '#E6EEFD', red: '#DC2626', redSoft: '#FCE9E9'
+  };
+  const FONT_C = '"Barlow Condensed", "Barlow", -apple-system, sans-serif';
+  const FONT_B = '"Barlow", -apple-system, BlinkMacSystemFont, sans-serif';
+
+  function roundRect(g, x, y, w, h, r) {
+    g.beginPath();
+    g.moveTo(x + r, y);
+    g.arcTo(x + w, y, x + w, y + h, r);
+    g.arcTo(x + w, y + h, x, y + h, r);
+    g.arcTo(x, y + h, x, y, r);
+    g.arcTo(x, y, x + w, y, r);
+    g.closePath();
+  }
+  function fitText(m, text, maxW) {
+    text = String(text);
+    if (m.measureText(text).width <= maxW) return text;
+    while (text.length > 1 && m.measureText(text + '…').width > maxW) text = text.slice(0, -1);
+    return text + '…';
+  }
+  function wrapText(m, text, maxW, maxLines) {
+    const words = String(text).split(/\s+/).filter(Boolean);
+    const lines = [];
+    let line = '';
+    for (const w of words) {
+      const test = line ? line + ' ' + w : w;
+      if (m.measureText(test).width <= maxW || !line) line = test;
+      else { lines.push(line); line = w; }
+    }
+    if (line) lines.push(line);
+    if (lines.length > maxLines) {
+      const kept = lines.slice(0, maxLines);
+      kept[maxLines - 1] = fitText(m, kept[maxLines - 1] + ' …', maxW);
+      return kept;
+    }
+    return lines.map(l => fitText(m, l, maxW));
+  }
+
+  // Draws the report onto g (or only measures when g is null). Returns the total height.
+  function paintPage(g, m) {
+    const P = 16, W = PAGE_W, CW = W - 2 * P;
+    const p = state.period;
+    const t = periodTotals(p);
+    const rate = getRate(periodId(p));
+    const oneLine = v => String(v).trim().replace(/\s*\n+\s*/g, '; ');
+    const font = f => { m.font = f; if (g) g.font = f; };
+    const text = (str, x, y, color, align = 'left') => {
+      if (!g) return;
+      g.fillStyle = color; g.textAlign = align; g.fillText(str, x, y);
+    };
+    const box = (x, y, w, h, r, fill, stroke) => {
+      if (!g) return;
+      roundRect(g, x, y, w, h, r);
+      if (fill) { g.fillStyle = fill; g.fill(); }
+      if (stroke) { g.strokeStyle = stroke; g.lineWidth = 1; g.stroke(); }
+    };
+    const label = (str, y) => { font(`600 11px ${FONT_B}`); text(str, P + 2, y, IMG.muted); };
+    let y = P;
+
+    // Header
+    font(`700 30px ${FONT_C}`); text('Timesheet', P, y + 28, IMG.text);
+    font(`500 15px ${FONT_B}`); text(fitText(m, state.settings.name || 'Half-monthly hours & pay', CW * 0.5), P, y + 49, state.settings.name ? IMG.text : IMG.muted);
+    font(`600 19px ${FONT_C}`); text(periodLabel(p), W - P, y + 25, IMG.text, 'right');
+    font(`600 11px ${FONT_B}`); text(`${p.half === 1 ? '1ST' : '2ND'} HALF · ${periodDates(p).length} DAYS`, W - P, y + 44, IMG.muted, 'right');
+    y += 66;
+
+    // Summary card
+    box(P, y, CW, 120, 16, IMG.surface, IMG.border);
+    font(`600 11px ${FONT_B}`); text('HOURLY RATE', P + 14, y + 27, IMG.muted);
+    font(`700 21px ${FONT_C}`); text(`${fmt$(rate)}/hr`, W - P - 14, y + 29, IMG.text, 'right');
+    const stats = [['WORKED', String(t.worked)], ['DAYS OFF', String(t.off)], ['WAGES', fmt$(t.wages)], ['REIMB.', fmt$(t.reimb)]];
+    const sw = (CW - 28 - 18) / 4;
+    stats.forEach(([l, v], i) => {
+      const x = P + 14 + i * (sw + 6);
+      box(x, y + 44, sw, 62, 10, IMG.chip);
+      font(`600 10px ${FONT_B}`); text(l, x + sw / 2, y + 66, IMG.muted, 'center');
+      font(`700 18px ${FONT_C}`); text(fitText(m, v, sw - 8), x + sw / 2, y + 92, IMG.text, 'center');
+    });
+    y += 136;
+
+    // Days
+    const dates = periodDates(p).filter(date => {
+      const d = getDay(date);
+      return d && ((d.status === 'worked' && shift(d)) || d.status === 'off' || dayReimb(d) > 0);
+    });
+    label('DAILY BREAKDOWN', y + 4);
+    y += 14;
+    if (!dates.length) {
+      box(P, y, CW, 56, 14, IMG.surface, IMG.border);
+      font(`500 14px ${FONT_B}`); text('No entries for this period', W / 2, y + 33, IMG.muted, 'center');
+      y += 64;
+    }
+    const today = todayISO();
+    dates.forEach(date => {
+      const d = getDay(date);
+      const dt = parseISO(date);
+      const sh = d.status === 'worked' ? shift(d) : null;
+      const off = d.status === 'off';
+      const reimb = dayReimb(d);
+      const nx = P + 68;
+      const rightW = 84;
+      font(`400 13px ${FONT_B}`);
+      const notes = d.notes && d.notes.trim() ? wrapText(m, 'Notes: ' + oneLine(d.notes), CW - 68 - 14, 2) : [];
+      const h = 68 + notes.length * 17;
+
+      box(P, y, CW, h, 14, IMG.surface, IMG.border);
+      if (g && (sh || off)) {
+        g.save(); roundRect(g, P, y, CW, h, 14); g.clip();
+        g.fillStyle = sh ? IMG.accent : IMG.red; g.fillRect(P, y, 4, h);
+        g.restore();
+      }
+      const isToday = date === today;
+      box(P + 12, y + 12, 44, 44, 10, isToday ? IMG.accent : IMG.chip);
+      font(`700 22px ${FONT_C}`); text(String(dt.getDate()), P + 34, y + 37, isToday ? '#fff' : (sh ? IMG.text : IMG.muted), 'center');
+      font(`600 9px ${FONT_B}`); text(MONTHS[dt.getMonth()].toUpperCase(), P + 34, y + 50, isToday ? 'rgba(255,255,255,0.85)' : IMG.muted, 'center');
+
+      font(`600 16px ${FONT_B}`);
+      const dn = DAY_NAMES[dt.getDay()];
+      text(dn, nx, y + 31, sh ? IMG.text : IMG.muted);
+      let tx = nx + m.measureText(dn).width + 8;
+      const pill = (str, fg, bg) => {
+        font(`600 11px ${FONT_B}`);
+        const pw = m.measureText(str).width + 14;
+        box(tx, y + 18, pw, 18, 9, bg);
+        text(str, tx + 7, y + 31, fg);
+        tx += pw + 6;
+      };
+      if (off) pill('Day off', IMG.red, IMG.redSoft);
+      if (reimb > 0) pill('+' + fmt$(reimb), IMG.accent, IMG.accentSoft);
+
+      if (sh) {
+        font(`500 12px ${FONT_B}`);
+        const hw = m.measureText('hrs').width;
+        text('hrs', W - P - 14, y + 33, IMG.muted, 'right');
+        font(`700 23px ${FONT_C}`); text(fmtH(sh.mins / 60), W - P - 14 - hw - 3, y + 33, IMG.text, 'right');
+        font(`500 13px ${FONT_B}`); text(fmt$(dayPay(d)), W - P - 14, y + 52, IMG.muted, 'right');
+      } else {
+        font(`500 20px ${FONT_C}`); text('—', W - P - 16, y + 38, IMG.muted, 'right');
+      }
+
+      font(`400 13px ${FONT_B}`);
+      const sub = sh ? [fmtRange(d), d.site && d.site.trim()].filter(Boolean).join(' · ') : off ? 'Not working' : 'Reimbursement only';
+      text(fitText(m, sub, CW - 68 - 14 - rightW), nx, y + 51, IMG.muted);
+      notes.forEach((ln, i) => text(ln, nx, y + 70 + i * 17, IMG.muted));
+      y += h + 8;
+    });
+
+    // Reimbursements
+    const items = [];
+    periodDates(p).forEach(date => {
+      const d = getDay(date);
+      if (!d || !d.reimb) return;
+      const dt = parseISO(date);
+      d.reimb.forEach(r => {
+        const amt = num(r.amount);
+        if (amt > 0) items.push({ left: `${DAY_SHORT[dt.getDay()]}, ${MONTHS[dt.getMonth()]} ${dt.getDate()} · ${r.type}${r.desc && r.desc.trim() ? ' — ' + oneLine(r.desc) : ''}`, amt });
+      });
+    });
+    if (items.length) {
+      y += 6;
+      label('REIMBURSEMENTS', y + 4);
+      y += 14;
+      const rh = 16 + items.length * 26 + 40;
+      box(P, y, CW, rh, 14, IMG.surface, IMG.border);
+      items.forEach((it, i) => {
+        const ry = y + 30 + i * 26;
+        font(`400 14px ${FONT_B}`); text(fitText(m, it.left, CW - 28 - 90), P + 14, ry, IMG.text);
+        font(`600 15px ${FONT_C}`); text(fmt$(it.amt), W - P - 14, ry, IMG.text, 'right');
+      });
+      const ly = y + 16 + items.length * 26;
+      if (g) { g.fillStyle = IMG.border; g.fillRect(P + 14, ly, CW - 28, 1); }
+      font(`600 14px ${FONT_B}`); text('Subtotal', P + 14, ly + 26, IMG.text);
+      font(`700 17px ${FONT_C}`); text(fmt$(t.reimb), W - P - 14, ly + 26, IMG.text, 'right');
+      y += rh + 8;
+    }
+
+    // Totals (mirrors the app's bottom bar)
+    y += 6;
+    box(P, y, CW, 104, 16, IMG.surface, IMG.border);
+    box(P + 12, y + 14, 98, 76, 12, IMG.accent);
+    font(`700 10px ${FONT_B}`); text('HOURS', P + 61, y + 39, 'rgba(255,255,255,0.85)', 'center');
+    font(`700 30px ${FONT_C}`); text(fmtH(t.hours), P + 61, y + 74, '#fff', 'center');
+    font(`700 11px ${FONT_B}`); text('💵 TOTAL CASH', P + 126, y + 36, IMG.muted);
+    font(`700 34px ${FONT_C}`); text(fitText(m, fmt$(t.total), CW - 126), P + 126, y + 70, IMG.text);
+    font(`500 12px ${FONT_B}`); text(fitText(m, `Wages ${fmt$(t.wages)} · Reimb. ${fmt$(t.reimb)}`, CW - 126), P + 126, y + 89, IMG.muted);
+    y += 104 + 22;
+
+    const now = new Date();
+    font(`400 11px ${FONT_B}`);
+    text(`Generated ${DAY_SHORT[now.getDay()]}, ${MONTHS[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()}`, W / 2, y, IMG.muted, 'center');
+    return y + 16;
+  }
+
+  async function makePageImage() {
+    if (document.fonts && document.fonts.load) {
+      try {
+        await Promise.all([
+          `700 30px "Barlow Condensed"`, `600 19px "Barlow Condensed"`,
+          `400 13px "Barlow"`, `500 15px "Barlow"`, `600 16px "Barlow"`, `700 11px "Barlow"`
+        ].map(f => document.fonts.load(f)));
+      } catch (e) { /* fall back to system fonts */ }
+    }
+    const m = document.createElement('canvas').getContext('2d');
+    const H = paintPage(null, m);
+    let S = 3;
+    while (S > 1 && PAGE_W * S * H * S > 15e6) S -= 0.5; // stay under iOS canvas limits
+    const cv = document.createElement('canvas');
+    cv.width = Math.round(PAGE_W * S);
+    cv.height = Math.round(H * S);
+    const g = cv.getContext('2d');
+    g.scale(S, S);
+    g.fillStyle = IMG.bg;
+    g.fillRect(0, 0, PAGE_W, H);
+    g.textBaseline = 'alphabetic';
+    paintPage(g, m);
+    const blob = await new Promise(res => cv.toBlob(res, 'image/png'));
+    if (!blob) throw new Error('Could not render image');
+    return blob;
+  }
+
+  /* ---------- Share sheet ---------- */
+  let shareText = '';
+  let shareTitleText = '';
+  let shareMode = 'message';
+  let pageBlob = null;
+  let pageUrl = '';
+  let pageJob = 0;
+
+  const pageFilename = () => {
+    const p = state.period;
+    const who = (state.settings.name || '').trim().replace(/[^\w\- ]+/g, '').replace(/\s+/g, '-');
+    return `Timesheet-${who ? who + '-' : ''}${p.y}-${pad2(p.m + 1)}-${p.half === 1 ? '01-15' : '16-' + periodEnd(p)}.png`;
+  };
+
+  function setShareMode(mode) {
+    shareMode = mode;
+    document.querySelectorAll('#shareMode [data-mode]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.mode === mode)));
+    $('#panelMessage').hidden = mode !== 'message';
+    $('#panelPage').hidden = mode !== 'page';
+  }
+  $('#shareMode').addEventListener('click', e => {
+    const b = e.target.closest('[data-mode]');
+    if (b) setShareMode(b.dataset.mode);
+  });
+
+  async function preparePageImage() {
+    const job = ++pageJob;
+    pageBlob = null;
+    const box = $('#pagePreview');
+    box.innerHTML = '<div class="page-loading">Preparing page…</div>';
+    try {
+      const blob = await makePageImage();
+      if (job !== pageJob) return;
+      if (pageUrl) URL.revokeObjectURL(pageUrl);
+      pageBlob = blob;
+      pageUrl = URL.createObjectURL(blob);
+      const img = new Image();
+      img.alt = 'Timesheet page';
+      img.src = pageUrl;
+      box.innerHTML = '';
+      box.appendChild(img);
+    } catch (err) {
+      console.error(err);
+      if (job === pageJob) box.innerHTML = '<div class="page-loading">Couldn’t create the page image.</div>';
+    }
+  }
+
+  $('#sendBtn').addEventListener('click', () => {
+    flush();
     const { text, title, totals } = buildReport();
-    if (!totals.worked && totals.reimb <= 0) {
+    if (!totals.worked && totals.reimb <= 0 && !totals.off) {
       toast('Nothing to send yet — log some hours first');
       return;
     }
-    if (navigator.share) {
-      try {
-        await navigator.share({ title, text });
-        return;
-      } catch (e) {
-        if (e && e.name === 'AbortError') return;
-        // Blocked (e.g. inside an embedded viewer): use our own sheet, without a "More" that would fail again.
-        openShareFallback(text, title, totals, false);
-        return;
-      }
-    }
-    openShareFallback(text, title, totals, false);
-  });
-
-  let shareText = '';
-  let shareTitleText = '';
-  $('#shareMore').addEventListener('click', async () => {
-    try { await navigator.share({ title: shareTitleText, text: shareText }); }
-    catch (e) { if (!e || e.name !== 'AbortError') toast('Sharing isn’t available here'); }
-  });
-  function openShareFallback(text, title, totals, allowMore) {
     shareText = text;
     shareTitleText = title;
     const enc = encodeURIComponent;
     $('#sharePreview').textContent = text;
     $('#shareTitle').textContent = state.settings.name ? `Timesheet – ${state.settings.name}` : 'Timesheet';
     $('#shareSub').textContent = `${periodLabel(state.period)} · ${fmt$(totals.total)}`;
-    $('#shareMore').hidden = !(allowMore && navigator.share);
     $('#shareWhatsApp').href = `https://wa.me/?text=${enc(text)}`;
     $('#shareSMS').href = `sms:&body=${enc(text)}`;
     $('#shareEmail').href = `mailto:?subject=${enc(title)}&body=${enc(text)}`;
+    $('#shareMore').hidden = !(navigator.share && !isFramed);
+    setShareMode(shareMode);
     openSheet('shareOverlay');
-  }
+    preparePageImage();
+  });
+
+  $('#shareMore').addEventListener('click', async () => {
+    try { await navigator.share({ title: shareTitleText, text: shareText }); }
+    catch (e) { if (!e || e.name !== 'AbortError') toast('Sharing isn’t available here'); }
+  });
+
+  $('#pageShare').addEventListener('click', async () => {
+    if (!pageBlob) { toast('Still preparing the page…'); return; }
+    const res = await shareOrSaveFile(pageFilename(), pageBlob, shareTitleText);
+    if (res === 'saved') toast('Page image saved');
+  });
+
+  $('#pageCopy').addEventListener('click', async () => {
+    if (!pageBlob) { toast('Still preparing the page…'); return; }
+    try {
+      if (!navigator.clipboard || !window.ClipboardItem) throw new Error('unsupported');
+      await navigator.clipboard.write([new ClipboardItem({ 'image/png': pageBlob })]);
+      toast('Image copied');
+    } catch (e) {
+      toast('Copy isn’t allowed here — press and hold the image');
+    }
+  });
 
   async function copyText(text) {
     try {
@@ -1695,7 +2018,7 @@ body.typing .bar { transform: translateY(110%); }
     return ok;
   }
   $('#shareCopy').addEventListener('click', async () => {
-    toast((await copyText(shareText)) ? 'Copied to clipboard' : 'Copy failed — select the text below');
+    toast((await copyText(shareText)) ? 'Copied to clipboard' : 'Copy failed — select the text in the preview');
   });
 
   /* ---------- Keyboard-aware bottom bar ---------- */
