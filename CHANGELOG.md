@@ -4,6 +4,16 @@ All notable changes to Timesheet. Versions follow [semantic versioning](https://
 the app version lives in `package.json`, `index.html` (`APP_VERSION`) and `sw.js` (`VERSION`), and
 `npm run check` fails if they differ.
 
+## 2.2.0 — 2026-11-16
+
+### Added
+- 🔻 **Deductions**: money taken out of your pay by the employer (💸 advances, 🛠️ tools, 🦺 safety gear,
+  👕 uniform, 🏠 housing, 🚐 transport…). Add them from the new Deductions section or inside a day.
+- **💵 Total cash = wages + reimbursements − deductions**, everywhere: bottom bar, summary, message,
+  page image and view-only link.
+- **Deduction types** you can keep, rename, remove or add (Settings → Deduction types).
+- The summary card now shows Worked, Days off, Wages, + Reimb., − Deductions and 💵 Total.
+
 ## 2.1.0 — 2026-10-28
 
 ### Added

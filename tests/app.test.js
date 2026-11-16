@@ -70,8 +70,8 @@ async function logShift(page, index, { start = '0800', sap = 'AM', end = '0430',
   return card;
 }
 
-async function addReimbursement(page, { newType, emoji, pick, amount, date, note }) {
-  await page.click('#addReimbBtn');
+async function addReimbursement(page, { newType, emoji, pick, amount, date, note, kind = 'reimb' }) {
+  await page.click(kind === 'ded' ? '#addDedBtn' : '#addReimbBtn');
   await page.waitForSelector('#reimbOverlay.show');
   if (newType) {
     await page.click('#rCatGrid [data-newcat]');
@@ -169,18 +169,92 @@ test('reimbursement types can be removed in Settings', async () => {
   await close(app);
 });
 
+test('deductions are taken out of the total everywhere', async () => {
+  const app = await openApp();
+  const { page } = app;
+  await logShift(page, 0); // 8.50 h × $20 = $170.00
+  await addReimbursement(page, { pick: 'Cab', amount: '18', date: '2026-10-16' });
+  await addReimbursement(page, { kind: 'ded', pick: 'Advance', amount: '50', date: '2026-10-16', note: 'Cash advance' });
+  await addReimbursement(page, { kind: 'ded', newType: 'Phone', emoji: '📱', amount: '10', date: '2026-10-17' });
+
+  // 170 + 18 − 60 = 128
+  assert.equal(await text(page, '#totAmount'), '$128.00');
+  assert.equal(await text(page, '#stDed'), '−$60.00');
+  assert.equal(await text(page, '#stTotal'), '$128.00');
+  assert.match(await text(page, '#totSub'), /−\$60\.00 ded\./);
+  const list = await page.locator('#dedList').innerText();
+  assert.match(list, /Advance/);
+  assert.match(list, /📱\s*Phone/);
+  assert.match(list, /−\$50\.00/);
+  assert.equal(await text(page, '#dedTotal'), '−$60.00');
+  assert.match(await page.locator('.card').nth(0).locator('.dname').innerText(), /🔻 \$50\.00/);
+
+  // Message
+  await page.click('#sendBtn');
+  await page.waitForSelector('#shareOverlay.show');
+  const report = await page.locator('#sharePreview').textContent();
+  for (const expected of ['🔻 DEDUCTIONS', 'Fri, Oct 16 | 💸 Advance | −$50.00 (Cash advance)', 'Sat, Oct 17 | 📱 Phone | −$10.00',
+    'Deductions: −$60.00', '💵 GRAND TOTAL: $128.00']) {
+    assert.ok(report.includes(expected), `report includes "${expected}"\n---\n${report}`);
+  }
+
+  // View-only link carries deductions too
+  await page.click('#shareMode [data-mode=link]');
+  await page.waitForFunction(() => document.querySelector('#linkOpen').getAttribute('href').includes('#v='));
+  const view = await app.ctx.newPage();
+  await view.goto(await page.getAttribute('#linkOpen', 'href'));
+  await view.waitForSelector('body.readonly #days .card');
+  assert.equal(await view.locator('#totAmount').innerText(), '$128.00');
+  assert.match(await view.locator('#dedList').innerText(), /📱\s*Phone/);
+  assert.equal(await view.locator('#addDedBtn').isVisible(), false);
+
+  // Deleting a deduction gives the money back, and Undo restores it
+  await page.click('#shareOverlay [data-close]');
+  await page.locator('#dedList .ritem', { hasText: 'Phone' }).click();
+  await page.click('#rDelete');
+  assert.equal(await text(page, '#totAmount'), '$138.00');
+  await page.click('#toastUndo');
+  assert.equal(await text(page, '#totAmount'), '$128.00');
+  await close(app);
+});
+
+test('deduction types can be managed in Settings and in a day', async () => {
+  const app = await openApp();
+  const { page } = app;
+  await page.click('#settingsBtn');
+  const names = await page.locator('#dedCatList [data-cf=name]').evaluateAll(els => els.map(e => e.value));
+  assert.deepEqual(names, ['Advance', 'Tools', 'Safety gear', 'Uniform', 'Housing', 'Transport', 'Other']);
+  await page.fill('#dedCatEmoji', '🍱');
+  await page.fill('#dedCatName', 'Canteen');
+  await page.click('#dedCatAddBtn');
+  await page.click('#settingsOverlay [data-close]');
+
+  // Add one inside the day card
+  const card = page.locator('.card').nth(2);
+  await card.locator('.card-head').click();
+  const dedBox = card.locator('[data-kind=ded]');
+  await dedBox.locator('[data-act=add-item]').click();
+  await dedBox.locator('select[data-rf=cat]').selectOption({ label: '🍱 Canteen' });
+  await dedBox.locator('[data-rf=amount]').fill('7.25');
+  assert.equal(await text(page, '#totAmount'), '-$7.25');
+  assert.match(await page.locator('#dedList').innerText(), /🍱\s*Canteen/);
+  await close(app);
+});
+
 test('data persists after closing and reopening', async () => {
   const app = await openApp();
   const { page } = app;
   await logShift(page, 0);
   await addReimbursement(page, { pick: 'Cab', amount: '18', date: '2026-10-16', note: 'Airport' });
+  await addReimbursement(page, { kind: 'ded', pick: 'Tools', amount: '25', date: '2026-10-16' });
   await page.waitForTimeout(600); // debounced save
   await page.reload();
   await page.waitForSelector('#days .card');
   assert.equal(await page.locator('#welcomeOverlay.show').count(), 0, 'welcome is not shown again');
   assert.equal(await text(page, '#totHours'), '8.50');
-  assert.equal(await text(page, '#totAmount'), '$188.00');
+  assert.equal(await text(page, '#totAmount'), '$163.00');
   assert.match(await page.locator('#reimbList').innerText(), /Cab/);
+  assert.match(await page.locator('#dedList').innerText(), /Tools/);
   await close(app);
 });
 
@@ -319,7 +393,8 @@ test('fits a 320px-wide phone without sideways scrolling', async () => {
   const app = await openApp({ viewport: { width: 320, height: 568 } });
   const { page } = app;
   await logShift(page, 0, { brk: '45' });
-  await page.locator('.card').nth(0).locator('[data-act=add-reimb]').click();
+  await page.locator('.card').nth(0).locator('[data-kind=reimb] [data-act=add-item]').click();
+  await page.locator('.card').nth(0).locator('[data-kind=ded] [data-act=add-item]').click();
   const width = await page.evaluate(() => document.documentElement.scrollWidth);
   assert.ok(width <= 320, `page is ${width}px wide`);
   await close(app);

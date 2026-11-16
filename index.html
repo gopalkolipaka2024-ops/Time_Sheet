@@ -171,7 +171,7 @@ main {
   background: var(--accent-soft); color: var(--accent-text); font-weight: 600; font-size: 15px;
 }
 .today-btn:active { opacity: 0.75; }
-.stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
 .stat { min-width: 0; padding: 8px 6px; border-radius: 12px; background: var(--chip); text-align: center; }
 .stat b {
   display: block; margin-top: 2px; font-family: var(--font-c); font-weight: 700; font-size: 18px; line-height: 1.1;
@@ -213,6 +213,7 @@ main {
 .rname .rnote { font-weight: 400; color: var(--muted); }
 .rdate { font-size: 13px; color: var(--muted); }
 .ramt { font-family: var(--font-c); font-weight: 700; font-size: 19px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ramt.neg { color: var(--danger); }
 .ramt.zero { font-family: var(--font); font-weight: 600; font-size: 13px; color: var(--danger); }
 .r-empty { padding: 14px; border: 1px dashed var(--border); border-radius: 12px; text-align: center; font-size: 14px; color: var(--muted); }
 .r-foot { display: flex; justify-content: space-between; align-items: baseline; padding-top: 10px; border-top: 1px solid var(--border); font-weight: 600; }
@@ -252,7 +253,8 @@ main {
   display: inline-block; padding: 1px 7px; border-radius: 999px; font-size: 11px; font-weight: 600;
   letter-spacing: 0.02em; background: var(--accent-soft); color: var(--accent-text); white-space: nowrap;
 }
-.tag.off { background: rgba(220, 38, 38, 0.12); color: var(--danger); }
+.tag.off, .tag.ded { background: rgba(220, 38, 38, 0.12); color: var(--danger); }
+.panel-sub { margin: -6px 0 0; font-size: 13px; color: var(--muted); }
 .hrs { text-align: right; white-space: nowrap; }
 .hval { font-family: var(--font-c); font-weight: 700; font-size: 22px; line-height: 1; font-variant-numeric: tabular-nums; }
 .hval small { margin-left: 2px; font-size: 13px; font-weight: 500; color: var(--muted); }
@@ -512,7 +514,7 @@ body.typing .bar { transform: translateY(110%); }
 .ss-preview .preview { margin-top: 8px; background: var(--surface); }
 
 /* View-only (shared link) mode */
-body.readonly #settingsBtn, body.readonly .pnav, body.readonly #addReimbBtn,
+body.readonly #settingsBtn, body.readonly .pnav, body.readonly #addReimbBtn, body.readonly #addDedBtn, body.readonly .panel-sub,
 body.readonly #sendBtn, body.readonly #todayBtn, body.readonly #installHint, body.readonly #setupNotice { display: none !important; }
 body.readonly .rate-field input { pointer-events: none; }
 .ro-banner { background: var(--chip); }
@@ -625,7 +627,9 @@ body.readonly .rate-field input { pointer-events: none; }
       <div class="stat"><span class="lbl">Worked</span><b id="stWorked">0</b></div>
       <div class="stat"><span class="lbl">Days off</span><b id="stOff">0</b></div>
       <div class="stat"><span class="lbl">Wages</span><b id="stWages">0</b></div>
-      <div class="stat"><span class="lbl">Reimb.</span><b id="stReimb">0</b></div>
+      <div class="stat"><span class="lbl">+ Reimb.</span><b id="stReimb">0</b></div>
+      <div class="stat"><span class="lbl">− Deductions</span><b id="stDed">0</b></div>
+      <div class="stat"><span class="lbl">💵 Total</span><b id="stTotal">0</b></div>
     </div>
     <div class="strip" id="strip" aria-label="Jump to day"></div>
   </section>
@@ -642,6 +646,16 @@ body.readonly .rate-field input { pointer-events: none; }
     </div>
     <div class="rlist" id="reimbList"></div>
     <div class="r-foot" id="reimbFoot" hidden><span>Total reimbursements</span><b id="reimbTotal">0</b></div>
+  </section>
+
+  <section class="panel" id="dedPanel" aria-labelledby="dedHeading">
+    <div class="panel-head">
+      <h2 id="dedHeading">🔻 Deductions</h2>
+      <button class="pill-btn" id="addDedBtn" type="button">+ Add</button>
+    </div>
+    <p class="panel-sub">Money taken out of your pay — advances, tools, uniform, housing…</p>
+    <div class="rlist" id="dedList"></div>
+    <div class="r-foot" id="dedFoot" hidden><span>Total deductions</span><b id="dedTotal" style="color:var(--danger)">0</b></div>
   </section>
 
   <h2 class="section-title">📅 Days</h2>
@@ -678,7 +692,7 @@ body.readonly .rate-field input { pointer-events: none; }
     </div>
     <div class="perks">
       <div><span aria-hidden="true">⏱️</span>Hours &amp; pay</div>
-      <div><span aria-hidden="true">🧾</span>Reimbursements</div>
+      <div><span aria-hidden="true">🧾</span>Reimbursements &amp; deductions</div>
       <div><span aria-hidden="true">🔒</span>Stays on your phone</div>
     </div>
     <label class="field">
@@ -724,7 +738,7 @@ body.readonly .rate-field input { pointer-events: none; }
       <button id="rNewAdd" type="button">Add</button>
     </div>
     <div>
-      <span class="flabel">Amount</span>
+      <span class="flabel" id="rAmountLabel">Amount</span>
       <label class="amt-big"><span id="rCur">$</span><input id="rAmount" type="text" inputmode="decimal" autocomplete="off" placeholder="0.00" aria-label="Amount"></label>
     </div>
     <label class="field">
@@ -793,6 +807,15 @@ body.readonly .rate-field input { pointer-events: none; }
       <button id="catAddBtn" type="button">Add</button>
     </div>
     <p class="hint">Keep the types you use, remove the rest. <button class="link-btn" id="catReset" type="button" style="height:auto;padding:0">Restore defaults</button></p>
+
+    <h3 class="sec-title">🔻 Deduction types</h3>
+    <div class="group cat-list" id="dedCatList"></div>
+    <div class="new-cat">
+      <input class="emo-in" id="dedCatEmoji" type="text" placeholder="🙂" aria-label="Emoji for new deduction type" autocomplete="off">
+      <input id="dedCatName" type="text" placeholder="Add a type, e.g. Phone" aria-label="Name of new deduction type" autocapitalize="words" autocomplete="off" enterkeyhint="done">
+      <button id="dedCatAddBtn" type="button">Add</button>
+    </div>
+    <p class="hint">Money your employer takes out of your pay. <button class="link-btn" id="dedCatReset" type="button" style="height:auto;padding:0">Restore defaults</button></p>
 
     <h3 class="sec-title">⚙️ Display</h3>
     <div>
@@ -947,7 +970,7 @@ body.readonly .rate-field input { pointer-events: none; }
   'use strict';
 
   /* ---------- App info ---------- */
-  const APP_VERSION = '2.1.0';
+  const APP_VERSION = '2.2.0';
   const APP_URL = 'https://gopalkolipaka2024-ops.github.io/Time_Sheet/';
   const REPO_URL = 'https://github.com/gopalkolipaka2024-ops/Time_Sheet';
 
@@ -965,6 +988,15 @@ body.readonly .rate-field input { pointer-events: none; }
     { id: 'tolls', emoji: '🛣️', name: 'Tolls' },
     { id: 'supplies', emoji: '🧰', name: 'Supplies' },
     { id: 'other', emoji: '📦', name: 'Other' }
+  ];
+  const DEFAULT_DED_CATEGORIES = [
+    { id: 'advance', emoji: '💸', name: 'Advance' },
+    { id: 'tools', emoji: '🛠️', name: 'Tools' },
+    { id: 'gear', emoji: '🦺', name: 'Safety gear' },
+    { id: 'uniform', emoji: '👕', name: 'Uniform' },
+    { id: 'housing', emoji: '🏠', name: 'Housing' },
+    { id: 'transport', emoji: '🚐', name: 'Transport' },
+    { id: 'ded-other', emoji: '📦', name: 'Other' }
   ];
   const CURRENCIES = [
     ['USD', 'US Dollar'], ['CAD', 'Canadian Dollar'], ['EUR', 'Euro'], ['GBP', 'British Pound'],
@@ -1122,8 +1154,26 @@ body.readonly .rate-field input { pointer-events: none; }
   const DEFAULT_SETTINGS = {
     name: '', rate: '', theme: 'system', clock: '12h', lastTimes: null, periodRates: {},
     currency: 'USD', periodType: 'half', weekStart: 1, biweekShift: 0,
-    categories: DEFAULT_CATEGORIES, onboarded: false, installHintDismissed: false
+    categories: DEFAULT_CATEGORIES, dedCategories: DEFAULT_DED_CATEGORIES, onboarded: false, installHintDismissed: false
   };
+  // Money items on a day: reimbursements are added to pay, deductions are taken out of it.
+  const KINDS = {
+    reimb: {
+      field: 'reimb', cats: 'categories', defaults: DEFAULT_CATEGORIES, sign: 1, emoji: '🧾', one: 'reimbursement',
+      ui: { list: '#reimbList', foot: '#reimbFoot', total: '#reimbTotal', add: '#addReimbBtn', catList: '#catList', catEmoji: '#catEmoji', catName: '#catName', catAdd: '#catAddBtn', catReset: '#catReset' },
+      empty: 'No reimbursements yet. Tap <b>+ Add</b> for 🚕 cab, 🍔 meals, 🅿️ parking or your own types.',
+      emptyView: 'No reimbursements in this period.',
+      dayEmpty: 'None for this day — 🚕 cab, 🍔 meals, 🅿️ parking…'
+    },
+    ded: {
+      field: 'ded', cats: 'dedCategories', defaults: DEFAULT_DED_CATEGORIES, sign: -1, emoji: '🔻', one: 'deduction',
+      ui: { list: '#dedList', foot: '#dedFoot', total: '#dedTotal', add: '#addDedBtn', catList: '#dedCatList', catEmoji: '#dedCatEmoji', catName: '#dedCatName', catAdd: '#dedCatAddBtn', catReset: '#dedCatReset' },
+      empty: 'Nothing taken out of your pay. Tap <b>+ Add</b> for 💸 advances, 🛠️ tools, 👕 uniform…',
+      emptyView: 'No deductions in this period.',
+      dayEmpty: 'None for this day — 💸 advance, 🛠️ tools, 👕 uniform…'
+    }
+  };
+  const KIND_KEYS = ['reimb', 'ded'];
   const state = {
     settings: clone(DEFAULT_SETTINGS),
     days: {},
@@ -1180,22 +1230,39 @@ body.readonly .rate-field input { pointer-events: none; }
   const periodSub = p => `${periodKind(p)} · ${periodDates(p).length} days`;
 
   /* ---------- Normalisation (load / import) ---------- */
-  function normalizeCategories(list) {
-    if (!Array.isArray(list)) return clone(DEFAULT_CATEGORIES);
+  function normalizeCategories(list, defaults = DEFAULT_CATEGORIES) {
+    if (!Array.isArray(list)) return clone(defaults);
     const seen = new Set();
     const out = list.filter(c => c && typeof c === 'object').map(c => ({
       id: String(c.id || uid()).slice(0, 40),
       emoji: firstGrapheme(c.emoji) || '🧾',
       name: String(c.name || '').trim().slice(0, 40) || 'Other'
     })).filter(c => !seen.has(c.id) && seen.add(c.id));
-    return out.length ? out : clone(DEFAULT_CATEGORIES);
+    return out.length ? out : clone(defaults);
+  }
+
+  const strOf = (v, max = 2000) => (typeof v === 'string' ? v.slice(0, max) : (typeof v === 'number' ? String(v) : ''));
+  function normalizeItems(list, cats) {
+    if (!Array.isArray(list)) return [];
+    return list.filter(r => r && typeof r === 'object').map(r => {
+      const type = strOf(r.type, 40) || 'Other';
+      // Older backups stored only the type name: link it to a matching category.
+      const match = cats.find(c => c.id === r.cat) || cats.find(c => c.name.toLowerCase() === type.toLowerCase());
+      return {
+        id: strOf(r.id, 40) || uid(),
+        cat: match ? match.id : '',
+        type: match ? match.name : type,
+        emoji: match ? match.emoji : (firstGrapheme(strOf(r.emoji, 16)) || '🧾'),
+        amount: cleanDecimal(strOf(r.amount, 20)),
+        desc: strOf(r.desc, 300)
+      };
+    });
   }
 
   function normalizeDay(raw) {
     if (!raw || typeof raw !== 'object' || !/^\d{4}-\d{2}-\d{2}$/.test(raw.date)) return null;
     const str = (v, max = 2000) => (typeof v === 'string' ? v.slice(0, max) : (typeof v === 'number' ? String(v) : ''));
     const two = v => str(v).replace(/\D/g, '').slice(0, 2);
-    const cats = state.settings.categories;
     const brk = Math.min(600, Math.max(0, Math.round(num(raw.brk))));
     const d = {
       date: raw.date,
@@ -1206,19 +1273,8 @@ body.readonly .rate-field input { pointer-events: none; }
       brk: brk ? String(brk) : undefined,
       site: str(raw.site, 300),
       notes: str(raw.notes),
-      reimb: Array.isArray(raw.reimb) ? raw.reimb.filter(r => r && typeof r === 'object').map(r => {
-        const type = str(r.type, 40) || 'Other';
-        // Older backups stored only the type name: link it to a matching category.
-        const match = cats.find(c => c.id === r.cat) || cats.find(c => c.name.toLowerCase() === type.toLowerCase());
-        return {
-          id: str(r.id, 40) || uid(),
-          cat: match ? match.id : '',
-          type: match ? match.name : type,
-          emoji: match ? match.emoji : (firstGrapheme(str(r.emoji, 16)) || '🧾'),
-          amount: cleanDecimal(str(r.amount, 20)),
-          desc: str(r.desc, 300)
-        };
-      }) : []
+      reimb: normalizeItems(raw.reimb, state.settings.categories),
+      ded: normalizeItems(raw.ded, state.settings.dedCategories)
     };
     ['status', 'sap', 'eap', 'brk'].forEach(k => { if (!d[k]) delete d[k]; });
     return d;
@@ -1237,6 +1293,7 @@ body.readonly .rate-field input { pointer-events: none; }
     s.onboarded = !!s.onboarded;
     s.installHintDismissed = !!s.installHintDismissed;
     s.categories = normalizeCategories(s.categories);
+    s.dedCategories = normalizeCategories(s.dedCategories, DEFAULT_DED_CATEGORIES);
     if (!s.periodRates || typeof s.periodRates !== 'object') s.periodRates = {};
     for (const k of Object.keys(s.periodRates)) s.periodRates[k] = cleanDecimal(s.periodRates[k]);
     if (s.lastTimes && typeof s.lastTimes === 'object') {
@@ -1251,11 +1308,12 @@ body.readonly .rate-field input { pointer-events: none; }
 
   const getDay = date => state.days[date];
   function ensureDay(date) {
-    if (!state.days[date]) state.days[date] = { date, sh: '', sm: '', eh: '', em: '', site: '', notes: '', reimb: [] };
+    if (!state.days[date]) state.days[date] = { date, sh: '', sm: '', eh: '', em: '', site: '', notes: '', reimb: [], ded: [] };
     return state.days[date];
   }
+  const itemsOf = (d, kind) => d[KINDS[kind].field] || (d[KINDS[kind].field] = []);
   function isEmptyDay(d) {
-    return !d.status && !d.site && !d.notes && !(d.reimb && d.reimb.length) && TIME_FIELDS.every(f => !d[f]);
+    return !d.status && !d.site && !d.notes && !(d.reimb && d.reimb.length) && !(d.ded && d.ded.length) && TIME_FIELDS.every(f => !d[f]);
   }
 
   function rateString(pid) {
@@ -1264,10 +1322,11 @@ body.readonly .rate-field input { pointer-events: none; }
   }
   const getRate = pid => (viewRate != null ? viewRate : Math.max(0, num(rateString(pid))));
 
-  const catById = id => state.settings.categories.find(c => c.id === id);
+  const catsOf = kind => state.settings[KINDS[kind].cats];
+  const catById = (id, kind = 'reimb') => catsOf(kind).find(c => c.id === id);
   // Current emoji/name for an item: follows its category (so renames apply), else the saved snapshot.
-  function catInfo(r) {
-    const c = r.cat && catById(r.cat);
+  function catInfo(r, kind = 'reimb') {
+    const c = r.cat && catById(r.cat, kind);
     return c ? { emoji: c.emoji, name: c.name } : { emoji: r.emoji || '🧾', name: r.type || 'Other' };
   }
 
@@ -1290,7 +1349,10 @@ body.readonly .rate-field input { pointer-events: none; }
   }
   const dayMinutes = d => (d && d.status === 'worked' ? (shift(d) || { mins: 0 }).mins : 0);
   const dayPay = d => round2(dayMinutes(d) / 60 * getRate(periodIdOfDate(d.date)));
-  const dayReimb = d => round2((d && d.reimb ? d.reimb : []).reduce((a, r) => a + Math.max(0, num(r.amount)), 0));
+  const dayItemsTotal = (d, kind) => round2((d && d[KINDS[kind].field] ? d[KINDS[kind].field] : []).reduce((a, r) => a + Math.max(0, num(r.amount)), 0));
+  const dayReimb = d => dayItemsTotal(d, 'reimb');
+  const dayDed = d => dayItemsTotal(d, 'ded');
+  const signed = (kind, v) => (KINDS[kind].sign < 0 ? `−${fmt$(v)}` : fmt$(v));
 
   function fmtTime(h, m) {
     const H = Number(h), M = Number(m || 0);
@@ -1317,7 +1379,7 @@ body.readonly .rate-field input { pointer-events: none; }
   }
 
   function periodTotals(p = state.period) {
-    const t = { mins: 0, wages: 0, reimb: 0, worked: 0, off: 0 };
+    const t = { mins: 0, wages: 0, reimb: 0, ded: 0, worked: 0, off: 0 };
     for (const date of periodDates(p)) {
       const d = getDay(date);
       if (!d) continue;
@@ -1325,18 +1387,21 @@ body.readonly .rate-field input { pointer-events: none; }
       if (d.status === 'worked' && m > 0) { t.mins += m; t.worked++; t.wages += dayPay(d); }
       if (d.status === 'off') t.off++;
       t.reimb += dayReimb(d);
+      t.ded += dayDed(d);
     }
     t.wages = round2(t.wages);
     t.reimb = round2(t.reimb);
+    t.ded = round2(t.ded);
     t.hours = t.mins / 60;
-    t.total = round2(t.wages + t.reimb);
+    // 💵 Total cash = wages + reimbursements − deductions
+    t.total = round2(t.wages + t.reimb - t.ded);
     return t;
   }
-  function periodReimbItems(p = state.period) {
+  function periodItems(kind, p = state.period) {
     const out = [];
     periodDates(p).forEach(date => {
       const d = getDay(date);
-      if (d && d.reimb) d.reimb.forEach(r => out.push({ date, r }));
+      if (d && d[KINDS[kind].field]) d[KINDS[kind].field].forEach(r => out.push({ date, r }));
     });
     return out;
   }
@@ -1496,6 +1561,7 @@ body.readonly .rate-field input { pointer-events: none; }
     const off = d && d.status === 'off';
     const sh = worked ? shift(d) : null;
     const reimb = dayReimb(d);
+    const ded = dayDed(d);
 
     card.classList.toggle('is-off', !worked);
     card.classList.toggle('st-worked', !!worked);
@@ -1510,6 +1576,7 @@ body.readonly .rate-field input { pointer-events: none; }
     if (date === todayISO()) tags += '<span class="tag">Today</span>';
     if (off) tags += '<span class="tag off">Day off</span>';
     if (reimb > 0) tags += `<span class="tag">🧾 ${esc(fmt$(reimb))}</span>`;
+    if (ded > 0) tags += `<span class="tag ded">🔻 ${esc(fmt$(ded))}</span>`;
     $('.dname', card).innerHTML = `${DAY_NAMES[dt.getDay()]} ${tags}`;
 
     let sub;
@@ -1535,31 +1602,31 @@ body.readonly .rate-field input { pointer-events: none; }
     $('.card-head', card).setAttribute('aria-label', `${DAY_NAMES[dt.getDay()]}, ${MONTHS[dt.getMonth()]} ${dt.getDate()}: ${worked && sh ? fmtH(sh.mins / 60) + ' hours' : off ? 'day off' : 'no entry'}`);
   }
 
-  function renderReimbPanel() {
-    const items = periodReimbItems();
-    const list = $('#reimbList');
+  function renderItemsPanel(kind) {
+    const K = KINDS[kind];
+    const items = periodItems(kind);
+    const list = $(K.ui.list);
     if (!items.length) {
-      list.innerHTML = readOnly
-        ? '<div class="r-empty">No reimbursements in this period.</div>'
-        : '<div class="r-empty">No reimbursements yet. Tap <b>+ Add</b> for 🚕 cab, 🍔 meals, 🅿️ parking or your own types.</div>';
-      $('#reimbFoot').hidden = true;
+      list.innerHTML = `<div class="r-empty">${readOnly ? K.emptyView : K.empty}</div>`;
+      $(K.ui.foot).hidden = true;
       return;
     }
     list.innerHTML = items.map(({ date, r }) => {
-      const c = catInfo(r);
+      const c = catInfo(r, kind);
       const amt = num(r.amount);
-      return `<button type="button" class="ritem" data-date="${date}" data-rid="${esc(r.id)}">
+      return `<button type="button" class="ritem" data-kind="${kind}" data-date="${date}" data-rid="${esc(r.id)}">
         <span class="emo" aria-hidden="true">${esc(c.emoji)}</span>
         <span class="rtext">
           <span class="rname">${esc(c.name)}${r.desc ? ` <span class="rnote">· ${esc(r.desc)}</span>` : ''}</span>
           <span class="rdate">${shortDate(date)}</span>
         </span>
-        <span class="ramt${amt > 0 ? '' : ' zero'}">${amt > 0 ? esc(fmt$(amt)) : 'Add amount'}</span>
+        <span class="ramt${amt > 0 ? (K.sign < 0 ? ' neg' : '') : ' zero'}">${amt > 0 ? esc(signed(kind, amt)) : 'Add amount'}</span>
       </button>`;
     }).join('');
-    $('#reimbFoot').hidden = false;
-    $('#reimbTotal').textContent = fmt$(periodTotals().reimb);
+    $(K.ui.foot).hidden = false;
+    $(K.ui.total).textContent = signed(kind, periodTotals()[kind]);
   }
+  function renderItemPanels() { KIND_KEYS.forEach(renderItemsPanel); }
 
   function refreshTotals() {
     const t = periodTotals();
@@ -1567,15 +1634,16 @@ body.readonly .rate-field input { pointer-events: none; }
     $('#totAmount').textContent = fmt$(t.total);
     const bits = [`${t.worked} day${t.worked === 1 ? '' : 's'} worked`];
     if (t.reimb > 0) bits.push(`+${fmt$(t.reimb)} reimb.`);
+    if (t.ded > 0) bits.push(`−${fmt$(t.ded)} ded.`);
     $('#totSub').textContent = bits.join(' · ');
     $('#stWorked').textContent = t.worked;
     $('#stOff').textContent = t.off;
-    [['#stWages', t.wages], ['#stReimb', t.reimb]].forEach(([sel, v]) => {
+    [['#stWages', fmt$(t.wages)], ['#stReimb', fmt$(t.reimb)], ['#stDed', t.ded > 0 ? `−${fmt$(t.ded)}` : fmt$(0)], ['#stTotal', fmt$(t.total)]].forEach(([sel, v]) => {
       const el = $(sel);
-      el.textContent = fmt$(v);
-      el.classList.toggle('long', el.textContent.length > 8); // e.g. $1,620.00 needs a smaller size
+      el.textContent = v;
+      el.classList.toggle('long', v.length > 9); // e.g. $1,620.00 needs a smaller size
     });
-    renderReimbPanel();
+    renderItemPanels();
   }
 
   function timeField(label, w, d) {
@@ -1630,39 +1698,50 @@ body.readonly .rate-field input { pointer-events: none; }
         <span class="flabel">📝 Notes</span>
         <textarea data-f="notes" rows="2" placeholder="Tasks, details…" autocapitalize="sentences">${esc(d.notes)}</textarea>
       </label>
-      <div class="reimb">
+      <div class="reimb" data-kind="reimb">
         <div class="reimb-head">
           <span class="flabel">🧾 Reimbursements</span>
-          <button type="button" class="link-btn" data-act="add-reimb">+ Add</button>
+          <button type="button" class="link-btn" data-act="add-item">+ Add</button>
+        </div>
+        <div class="reimb-list"></div>
+      </div>
+      <div class="reimb" data-kind="ded">
+        <div class="reimb-head">
+          <span class="flabel">🔻 Deductions</span>
+          <button type="button" class="link-btn" data-act="add-item">+ Add</button>
         </div>
         <div class="reimb-list"></div>
       </div>
       <div class="body-foot"><button type="button" class="text-danger" data-act="clear-day">Clear day</button></div>`;
   }
 
-  function catOptions(r) {
-    const cats = state.settings.categories;
-    let html = cats.map(c => `<option value="${esc(c.id)}"${c.id === r.cat ? ' selected' : ''}>${esc(c.emoji)} ${esc(c.name)}</option>`).join('');
-    if (!r.cat || !catById(r.cat)) html = `<option value="" selected>${esc(r.emoji || '🧾')} ${esc(r.type || 'Other')}</option>` + html;
+  function catOptions(r, kind) {
+    let html = catsOf(kind).map(c => `<option value="${esc(c.id)}"${c.id === r.cat ? ' selected' : ''}>${esc(c.emoji)} ${esc(c.name)}</option>`).join('');
+    if (!r.cat || !catById(r.cat, kind)) html = `<option value="" selected>${esc(r.emoji || '🧾')} ${esc(r.type || 'Other')}</option>` + html;
     return html;
   }
 
-  function renderReimb(date) {
+  // Reimbursement and deduction rows inside an open day card.
+  function renderDayItems(date) {
     const card = cardEl(date);
-    const list = card && $('.reimb-list', card);
-    if (!list) return;
-    const items = (getDay(date) || {}).reimb || [];
-    if (!items.length) {
-      list.innerHTML = '<div class="reimb-empty">None for this day — 🚕 cab, 🍔 meals, 🅿️ parking…</div>';
-      return;
-    }
-    list.innerHTML = items.map(r => `
-      <div class="rrow" data-rid="${esc(r.id)}">
-        <select data-rf="cat" aria-label="Reimbursement type">${catOptions(r)}</select>
-        <div class="amt"><span>${esc(curSymbol)}</span><input data-rf="amount" type="text" inputmode="decimal" autocomplete="off" placeholder="0.00" value="${esc(r.amount)}" aria-label="Amount"></div>
-        <button type="button" class="del" data-act="del-reimb" aria-label="Remove reimbursement">${TRASH}</button>
-        <input class="rdesc" data-rf="desc" type="text" autocomplete="off" placeholder="Note (optional)" value="${esc(r.desc)}" aria-label="Note">
-      </div>`).join('');
+    if (!card) return;
+    KIND_KEYS.forEach(kind => {
+      const K = KINDS[kind];
+      const list = $(`[data-kind="${kind}"] .reimb-list`, card);
+      if (!list) return;
+      const items = (getDay(date) || {})[K.field] || [];
+      if (!items.length) {
+        list.innerHTML = `<div class="reimb-empty">${K.dayEmpty}</div>`;
+        return;
+      }
+      list.innerHTML = items.map(r => `
+        <div class="rrow" data-rid="${esc(r.id)}">
+          <select data-rf="cat" aria-label="${K.one} type">${catOptions(r, kind)}</select>
+          <div class="amt"><span>${K.sign < 0 ? '−' : ''}${esc(curSymbol)}</span><input data-rf="amount" type="text" inputmode="decimal" autocomplete="off" placeholder="0.00" value="${esc(r.amount)}" aria-label="Amount"></div>
+          <button type="button" class="del" data-act="del-item" aria-label="Remove ${K.one}">${TRASH}</button>
+          <input class="rdesc" data-rf="desc" type="text" autocomplete="off" placeholder="Note (optional)" value="${esc(r.desc)}" aria-label="Note">
+        </div>`).join('');
+    });
   }
 
   function refreshCalc(date) {
@@ -1708,10 +1787,10 @@ body.readonly .rate-field input { pointer-events: none; }
     }
     if (d.site) add('📍 Site', esc(d.site));
     if (d.notes) add('📝 Notes', esc(d.notes).replace(/\n/g, '<br>'));
-    (d.reimb || []).forEach(r => {
-      const c = catInfo(r);
-      add(`${esc(c.emoji)} ${esc(c.name)}`, `${esc(fmt$(num(r.amount)))}${r.desc ? `<br><span class="muted">${esc(r.desc)}</span>` : ''}`);
-    });
+    KIND_KEYS.forEach(kind => (d[KINDS[kind].field] || []).forEach(r => {
+      const c = catInfo(r, kind);
+      add(`${esc(c.emoji)} ${esc(c.name)}`, `${esc(signed(kind, num(r.amount)))}${r.desc ? `<br><span class="muted">${esc(r.desc)}</span>` : ''}`);
+    }));
     return `<dl class="ro-list">${rows.join('')}</dl>`;
   }
 
@@ -1725,7 +1804,7 @@ body.readonly .rate-field input { pointer-events: none; }
     if (!card) return;
     const body = $('.card-body', card);
     body.innerHTML = readOnly ? viewBodyHTML(date) : bodyHTML(date);
-    renderReimb(date);
+    renderDayItems(date);
     refreshCalc(date);
     body.hidden = false;
     card.classList.add('open');
@@ -1755,7 +1834,7 @@ body.readonly .rate-field input { pointer-events: none; }
     if (!card || state.open !== date || readOnly) return;
     const body = $('.card-body', card);
     body.innerHTML = bodyHTML(date);
-    renderReimb(date);
+    renderDayItems(date);
     refreshCalc(date);
     const ta = $('textarea', body);
     if (ta && ta.value) autoGrow(ta);
@@ -1832,17 +1911,18 @@ body.readonly .rate-field input { pointer-events: none; }
       rerenderBody(date);
       afterChange(date);
       toast(`Copied from ${shortDate(prev)}`);
-    } else if (act === 'add-reimb') {
+    } else if (act === 'add-item') {
+      const kind = btn.closest('[data-kind]').dataset.kind;
       const d = ensureDay(date);
-      const c = state.settings.categories[0];
+      const c = catsOf(kind)[0];
       const r = { id: uid(), cat: c.id, type: c.name, emoji: c.emoji, amount: '', desc: '' };
-      d.reimb.push(r);
-      renderReimb(date);
+      itemsOf(d, kind).push(r);
+      renderDayItems(date);
       afterChange(date);
-      const inp = $(`.rrow[data-rid="${r.id}"] [data-rf="amount"]`, card);
+      const inp = $(`[data-kind="${kind}"] .rrow[data-rid="${r.id}"] [data-rf="amount"]`, card);
       if (inp) inp.focus();
-    } else if (act === 'del-reimb') {
-      deleteReimb(date, btn.closest('.rrow').dataset.rid);
+    } else if (act === 'del-item') {
+      deleteItem(btn.closest('[data-kind]').dataset.kind, date, btn.closest('.rrow').dataset.rid);
     } else if (act === 'clear-day') {
       const d = getDay(date);
       if (!d) return;
@@ -1909,15 +1989,16 @@ body.readonly .rate-field input { pointer-events: none; }
       afterChange(date);
     } else if (rf) {
       const d = ensureDay(date);
+      const kind = inp.closest('[data-kind]').dataset.kind;
       const rid = inp.closest('.rrow').dataset.rid;
-      const r = d.reimb.find(x => x.id === rid);
+      const r = itemsOf(d, kind).find(x => x.id === rid);
       if (!r) return;
       if (rf === 'amount') {
         const v = cleanDecimal(inp.value);
         if (inp.value !== v) inp.value = v;
         r.amount = v;
       } else if (rf === 'cat') {
-        const c = catById(inp.value);
+        const c = catById(inp.value, kind);
         if (!c) return;
         Object.assign(r, { cat: c.id, type: c.name, emoji: c.emoji });
       } else r[rf] = inp.value;
@@ -1974,18 +2055,19 @@ body.readonly .rate-field input { pointer-events: none; }
     setTimeout(() => { if (document.activeElement === el && el.value.length === 2 && el.selectionStart === el.selectionEnd) el.select(); }, 0);
   });
 
-  function deleteReimb(date, rid) {
+  function deleteItem(kind, date, rid) {
     const d = getDay(date);
     if (!d) return;
-    const index = d.reimb.findIndex(r => r.id === rid);
+    const list = itemsOf(d, kind);
+    const index = list.findIndex(r => r.id === rid);
     if (index < 0) return;
-    const [item] = d.reimb.splice(index, 1);
-    if (state.open === date) renderReimb(date);
+    const [item] = list.splice(index, 1);
+    if (state.open === date) renderDayItems(date);
     afterChange(date);
-    toast(`${catInfo(item).name} removed`, {
+    toast(`${catInfo(item, kind).name} removed`, {
       undo: () => {
-        ensureDay(date).reimb.splice(index, 0, item);
-        if (state.open === date) renderReimb(date);
+        itemsOf(ensureDay(date), kind).splice(index, 0, item);
+        if (state.open === date) renderDayItems(date);
         afterChange(date);
       }
     });
@@ -2108,9 +2190,8 @@ body.readonly .rate-field input { pointer-events: none; }
     }
   }
 
-  function renderCatList() {
-    const cats = state.settings.categories;
-    $('#catList').innerHTML = cats.map(c => `
+  function renderCatList(kind) {
+    $(KINDS[kind].ui.catList).innerHTML = catsOf(kind).map(c => `
       <div class="cat-row" data-id="${esc(c.id)}">
         <input class="emo-in" data-cf="emoji" type="text" value="${esc(c.emoji)}" aria-label="Emoji" autocomplete="off">
         <input data-cf="name" type="text" value="${esc(c.name)}" aria-label="Type name" autocapitalize="words" autocomplete="off">
@@ -2125,7 +2206,7 @@ body.readonly .rate-field input { pointer-events: none; }
     fillSelect($('#setPeriod'), PERIOD_TYPES, state.settings.periodType);
     $('#setWeekStart').value = String(state.settings.weekStart);
     renderPeriodOptions();
-    renderCatList();
+    KIND_KEYS.forEach(renderCatList);
     document.querySelectorAll('#clockSeg [data-clock]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.clock === state.settings.clock)));
     applyTheme();
     $('#storageNote').textContent = Store.isFallback
@@ -2192,81 +2273,85 @@ body.readonly .rate-field input { pointer-events: none; }
     if (mq.addEventListener) mq.addEventListener('change', onChange); else if (mq.addListener) mq.addListener(onChange);
   }
 
-  // Reimbursement types
+  // Reimbursement and deduction types
   function onCategoriesChanged() {
     markSettings();
-    if (state.open) renderReimb(state.open);
+    if (state.open) renderDayItems(state.open);
     periodDates(state.period).forEach(refreshCardHead);
-    renderReimbPanel();
+    renderItemPanels();
   }
-  function addCategory(emoji, name) {
+  function addCategory(kind, emoji, name) {
     name = String(name || '').trim().slice(0, 40);
     if (!name) { toast('Type a name for the new type'); return null; }
-    const existing = state.settings.categories.find(c => c.name.toLowerCase() === name.toLowerCase());
+    const existing = catsOf(kind).find(c => c.name.toLowerCase() === name.toLowerCase());
     if (existing) { toast(`“${existing.name}” already exists`); return existing; }
-    const c = { id: uid(), emoji: firstGrapheme(emoji) || '🧾', name };
-    state.settings.categories.push(c);
+    const c = { id: uid(), emoji: firstGrapheme(emoji) || KINDS[kind].emoji, name };
+    catsOf(kind).push(c);
     onCategoriesChanged();
     return c;
   }
-  $('#catList').addEventListener('input', e => {
-    const row = e.target.closest('.cat-row');
-    const c = row && catById(row.dataset.id);
-    if (!c) return;
-    if (e.target.dataset.cf === 'emoji') {
-      const v = firstGrapheme(e.target.value);
-      if (v) c.emoji = v;
-    } else if (e.target.dataset.cf === 'name') {
-      c.name = e.target.value.slice(0, 40) || c.name;
-    }
-    onCategoriesChanged();
-  });
-  $('#catList').addEventListener('focusout', e => {
-    if (e.target.dataset && e.target.dataset.cf === 'emoji') {
+  KIND_KEYS.forEach(kind => {
+    const ui = KINDS[kind].ui;
+    $(ui.catList).addEventListener('input', e => {
       const row = e.target.closest('.cat-row');
-      const c = row && catById(row.dataset.id);
-      if (c) e.target.value = c.emoji;
-    }
-  });
-  $('#catList').addEventListener('click', e => {
-    const del = e.target.closest('[data-cdel]');
-    if (!del) return;
-    const id = del.closest('.cat-row').dataset.id;
-    const cats = state.settings.categories;
-    if (cats.length <= 1) { toast('Keep at least one type'); return; }
-    const index = cats.findIndex(c => c.id === id);
-    const [removed] = cats.splice(index, 1);
-    renderCatList();
-    onCategoriesChanged();
-    toast(`${removed.emoji} ${removed.name} removed`, {
-      undo: () => {
-        state.settings.categories.splice(index, 0, removed);
-        renderCatList();
-        onCategoriesChanged();
+      const c = row && catById(row.dataset.id, kind);
+      if (!c) return;
+      if (e.target.dataset.cf === 'emoji') {
+        const v = firstGrapheme(e.target.value);
+        if (v) c.emoji = v;
+      } else if (e.target.dataset.cf === 'name') {
+        c.name = e.target.value.slice(0, 40) || c.name;
+      }
+      onCategoriesChanged();
+    });
+    $(ui.catList).addEventListener('focusout', e => {
+      if (e.target.dataset && e.target.dataset.cf === 'emoji') {
+        const row = e.target.closest('.cat-row');
+        const c = row && catById(row.dataset.id, kind);
+        if (c) e.target.value = c.emoji;
       }
     });
-  });
-  $('#catAddBtn').addEventListener('click', () => {
-    const c = addCategory($('#catEmoji').value, $('#catName').value);
-    if (c) {
-      $('#catEmoji').value = '';
-      $('#catName').value = '';
-      renderCatList();
-      toast(`${c.emoji} ${c.name} added`);
-    }
-  });
-  $('#catName').addEventListener('keydown', e => { if (e.key === 'Enter') $('#catAddBtn').click(); });
-  $('#catReset').addEventListener('click', () => {
-    const before = clone(state.settings.categories);
-    state.settings.categories = clone(DEFAULT_CATEGORIES);
-    renderCatList();
-    onCategoriesChanged();
-    toast('Default types restored', {
-      undo: () => {
-        state.settings.categories = before;
-        renderCatList();
-        onCategoriesChanged();
+    $(ui.catList).addEventListener('click', e => {
+      const del = e.target.closest('[data-cdel]');
+      if (!del) return;
+      const id = del.closest('.cat-row').dataset.id;
+      const cats = catsOf(kind);
+      if (cats.length <= 1) { toast('Keep at least one type'); return; }
+      const index = cats.findIndex(c => c.id === id);
+      const [removed] = cats.splice(index, 1);
+      renderCatList(kind);
+      onCategoriesChanged();
+      toast(`${removed.emoji} ${removed.name} removed`, {
+        undo: () => {
+          catsOf(kind).splice(index, 0, removed);
+          renderCatList(kind);
+          onCategoriesChanged();
+        }
+      });
+    });
+    $(ui.catAdd).addEventListener('click', () => {
+      const c = addCategory(kind, $(ui.catEmoji).value, $(ui.catName).value);
+      if (c) {
+        $(ui.catEmoji).value = '';
+        $(ui.catName).value = '';
+        renderCatList(kind);
+        toast(`${c.emoji} ${c.name} added`);
       }
+    });
+    $(ui.catName).addEventListener('keydown', e => { if (e.key === 'Enter') $(ui.catAdd).click(); });
+    $(ui.catReset).addEventListener('click', () => {
+      const field = KINDS[kind].cats;
+      const before = clone(state.settings[field]);
+      state.settings[field] = clone(KINDS[kind].defaults);
+      renderCatList(kind);
+      onCategoriesChanged();
+      toast('Default types restored', {
+        undo: () => {
+          state.settings[field] = before;
+          renderCatList(kind);
+          onCategoriesChanged();
+        }
+      });
     });
   });
 
@@ -2345,50 +2430,56 @@ body.readonly .rate-field input { pointer-events: none; }
     toast((await copyText(`${text}\n${url}`)) ? 'App link copied — paste it to share 📋' : url);
   });
 
-  /* ---------- Reimbursement editor ---------- */
-  let rEdit = null;   // { date, rid } when editing an existing item
-  let rCat = null;    // selected category id ('' keeps an item's saved custom type)
+  /* ---------- Reimbursement / deduction editor ---------- */
+  let rKind = 'reimb'; // which kind of item the sheet is editing
+  let rEdit = null;    // { date, rid } when editing an existing item
+  let rCat = null;     // selected category id ('' keeps an item's saved custom type)
 
   function renderCatGrid() {
-    const cats = state.settings.categories;
-    $('#rCatGrid').innerHTML = cats.map(c => `
+    $('#rCatGrid').innerHTML = catsOf(rKind).map(c => `
       <button type="button" class="cat-chip" data-cat="${esc(c.id)}" aria-pressed="${c.id === rCat}">
         <span class="ce" aria-hidden="true">${esc(c.emoji)}</span><span class="cn">${esc(c.name)}</span>
       </button>`).join('') +
       '<button type="button" class="cat-chip new" data-newcat><span class="ce" aria-hidden="true">＋</span><span class="cn">New type</span></button>';
   }
 
-  function openReimbSheet(date, rid) {
+  function openItemSheet(kind, date, rid) {
+    const K = KINDS[kind];
+    rKind = kind;
     const dates = periodDates(state.period);
-    const item = rid && getDay(date) ? getDay(date).reimb.find(x => x.id === rid) : null;
+    const item = rid && getDay(date) ? itemsOf(getDay(date), kind).find(x => x.id === rid) : null;
     rEdit = item ? { date, rid } : null;
     const today = todayISO();
     const def = item ? date
       : state.open && dates.includes(state.open) ? state.open
       : dates.includes(today) ? today : dates[0];
-    $('#reimbTitle').textContent = item ? 'Edit reimbursement' : 'Add reimbursement';
+    $('#reimbTitle').textContent = `${item ? 'Edit' : 'Add'} ${K.one}`;
+    $('#rCatGrid').setAttribute('aria-label', `${K.one} type`);
+    $('#rAmountLabel').textContent = K.sign < 0 ? 'Amount taken from your pay' : 'Amount';
     fillSelect($('#rDate'), dates.map(d => [d, shortDate(d)]), def);
-    rCat = item ? (item.cat && catById(item.cat) ? item.cat : '') : state.settings.categories[0].id;
+    rCat = item ? (item.cat && catById(item.cat, kind) ? item.cat : '') : catsOf(kind)[0].id;
     renderCatGrid();
     $('#rNewCat').hidden = true;
     $('#rAmount').value = item ? item.amount : '';
     $('#rDesc').value = item ? item.desc : '';
-    $('#rCur').textContent = curSymbol;
+    $('#rCur').textContent = (K.sign < 0 ? '−' : '') + curSymbol;
     $('#rDelete').hidden = !item;
     $('#rActions').classList.toggle('single', !item);
     openSheet('reimbOverlay');
   }
 
-  $('#addReimbBtn').addEventListener('click', () => openReimbSheet(null, null));
-  $('#reimbList').addEventListener('click', e => {
-    const row = e.target.closest('.ritem');
-    if (!row) return;
-    if (readOnly) {
-      if (state.open && state.open !== row.dataset.date) closeCard(state.open);
-      if (state.open !== row.dataset.date) openCard(row.dataset.date);
-      return;
-    }
-    openReimbSheet(row.dataset.date, row.dataset.rid);
+  KIND_KEYS.forEach(kind => {
+    $(KINDS[kind].ui.add).addEventListener('click', () => openItemSheet(kind, null, null));
+    $(KINDS[kind].ui.list).addEventListener('click', e => {
+      const row = e.target.closest('.ritem');
+      if (!row) return;
+      if (readOnly) {
+        if (state.open && state.open !== row.dataset.date) closeCard(state.open);
+        if (state.open !== row.dataset.date) openCard(row.dataset.date);
+        return;
+      }
+      openItemSheet(kind, row.dataset.date, row.dataset.rid);
+    });
   });
   $('#rCatGrid').addEventListener('click', e => {
     if (e.target.closest('[data-newcat]')) {
@@ -2402,7 +2493,7 @@ body.readonly .rate-field input { pointer-events: none; }
     document.querySelectorAll('#rCatGrid [data-cat]').forEach(b => b.setAttribute('aria-pressed', String(b === chip)));
   });
   $('#rNewAdd').addEventListener('click', () => {
-    const c = addCategory($('#rNewEmoji').value, $('#rNewName').value);
+    const c = addCategory(rKind, $('#rNewEmoji').value, $('#rNewName').value);
     if (!c) return;
     rCat = c.id;
     $('#rNewEmoji').value = '';
@@ -2414,37 +2505,38 @@ body.readonly .rate-field input { pointer-events: none; }
   $('#rAmount').addEventListener('input', e => { const v = cleanDecimal(e.target.value); if (e.target.value !== v) e.target.value = v; });
 
   $('#rSave').addEventListener('click', () => {
+    const kind = rKind;
     const amount = cleanDecimal($('#rAmount').value);
     if (!(num(amount) > 0)) { toast('Enter an amount'); $('#rAmount').focus(); return; }
     const date = $('#rDate').value;
-    const old = rEdit && getDay(rEdit.date) ? getDay(rEdit.date).reimb.find(x => x.id === rEdit.rid) : null;
-    const c = rCat ? catById(rCat) : null;
+    const old = rEdit && getDay(rEdit.date) ? itemsOf(getDay(rEdit.date), kind).find(x => x.id === rEdit.rid) : null;
+    const c = rCat ? catById(rCat, kind) : null;
     const item = {
       id: old ? old.id : uid(),
       cat: c ? c.id : (old ? old.cat : ''),
       type: c ? c.name : (old ? old.type : 'Other'),
-      emoji: c ? c.emoji : (old ? old.emoji : '🧾'),
+      emoji: c ? c.emoji : (old ? old.emoji : KINDS[kind].emoji),
       amount,
       desc: $('#rDesc').value.trim().slice(0, 300)
     };
     if (old && rEdit.date !== date) {
       const od = getDay(rEdit.date);
-      od.reimb = od.reimb.filter(x => x.id !== old.id);
-      if (state.open === rEdit.date) renderReimb(rEdit.date);
+      od[KINDS[kind].field] = itemsOf(od, kind).filter(x => x.id !== old.id);
+      if (state.open === rEdit.date) renderDayItems(rEdit.date);
       afterChange(rEdit.date);
     }
-    const d = ensureDay(date);
-    const i = d.reimb.findIndex(x => x.id === item.id);
-    if (i >= 0) d.reimb[i] = item; else d.reimb.push(item);
-    if (state.open === date) renderReimb(date);
+    const list = itemsOf(ensureDay(date), kind);
+    const i = list.findIndex(x => x.id === item.id);
+    if (i >= 0) list[i] = item; else list.push(item);
+    if (state.open === date) renderDayItems(date);
     afterChange(date);
     closeSheet('reimbOverlay');
-    toast(`${catInfo(item).emoji} ${old ? 'Updated' : 'Added'} ${fmt$(num(amount))}`);
+    toast(`${catInfo(item, kind).emoji} ${old ? 'Updated' : 'Added'} ${signed(kind, num(amount))}`);
   });
   $('#rDelete').addEventListener('click', () => {
     if (!rEdit) return;
     closeSheet('reimbOverlay');
-    deleteReimb(rEdit.date, rEdit.rid);
+    deleteItem(rKind, rEdit.date, rEdit.rid);
   });
 
   /* ---------- Report (message) ---------- */
@@ -2476,19 +2568,20 @@ body.readonly .rate-field input { pointer-events: none; }
       L.push('');
     });
 
-    const reimbLines = periodReimbItems(p)
-      .filter(({ r }) => num(r.amount) > 0)
-      .map(({ date, r }) => {
-        const c = catInfo(r);
-        return `${shortDate(date)} | ${c.emoji} ${c.name} | ${fmt$(num(r.amount))}${r.desc && r.desc.trim() ? ` (${oneLine(r.desc)})` : ''}`;
-      });
-    if (reimbLines.length) {
-      L.push('🧾 REIMBURSEMENTS');
+    [['reimb', '🧾 REIMBURSEMENTS'], ['ded', '🔻 DEDUCTIONS']].forEach(([kind, heading]) => {
+      const lines = periodItems(kind, p)
+        .filter(({ r }) => num(r.amount) > 0)
+        .map(({ date, r }) => {
+          const c = catInfo(r, kind);
+          return `${shortDate(date)} | ${c.emoji} ${c.name} | ${signed(kind, num(r.amount))}${r.desc && r.desc.trim() ? ` (${oneLine(r.desc)})` : ''}`;
+        });
+      if (!lines.length) return;
+      L.push(heading);
       L.push(RULE);
-      L.push(...reimbLines);
-      L.push(`Subtotal: ${fmt$(t.reimb)}`);
+      L.push(...lines);
+      L.push(`Subtotal: ${signed(kind, t[kind])}`);
       L.push('');
-    }
+    });
 
     L.push('📊 SUMMARY');
     L.push(RULE);
@@ -2496,7 +2589,8 @@ body.readonly .rate-field input { pointer-events: none; }
     if (t.off) L.push(`Days off: ${t.off}`);
     L.push(`Total hours: ${fmtH(t.hours)}`);
     L.push(`Wages: ${fmt$(t.wages)}`);
-    L.push(`Reimbursements: ${fmt$(t.reimb)}`);
+    L.push(`Reimbursements: +${fmt$(t.reimb)}`);
+    if (t.ded > 0) L.push(`Deductions: −${fmt$(t.ded)}`);
     L.push(RULE);
     L.push(`💵 GRAND TOTAL: ${fmt$(t.total)}`);
     return { text: L.join('\n'), title: `Timesheet – ${periodLabel(p)}${state.settings.name ? ' – ' + state.settings.name.trim() : ''}`, totals: t };
@@ -2622,23 +2716,27 @@ body.readonly .rate-field input { pointer-events: none; }
     y += 66;
 
     // Summary card
-    box(P, y, CW, 120, 16, IMG.surface, IMG.border);
+    box(P, y, CW, 188, 16, IMG.surface, IMG.border);
     font(`600 11px ${FONT_B}`); text('HOURLY RATE', P + 14, y + 27, IMG.muted);
     font(`700 21px ${FONT_C}`); text(`${fmt$(rate)}/hr`, W - P - 14, y + 29, IMG.text, 'right');
-    const stats = [['WORKED', String(t.worked)], ['DAYS OFF', String(t.off)], ['WAGES', fmt$(t.wages)], ['REIMB.', fmt$(t.reimb)]];
-    const sw = (CW - 28 - 18) / 4;
-    stats.forEach(([l, v], i) => {
-      const x = P + 14 + i * (sw + 6);
-      box(x, y + 44, sw, 62, 10, IMG.chip);
-      font(`600 10px ${FONT_B}`); text(l, x + sw / 2, y + 66, IMG.muted, 'center');
-      font(`700 18px ${FONT_C}`); text(fitText(m, v, sw - 8), x + sw / 2, y + 92, IMG.text, 'center');
+    const stats = [
+      ['WORKED', String(t.worked), IMG.text], ['DAYS OFF', String(t.off), IMG.text], ['WAGES', fmt$(t.wages), IMG.text],
+      ['+ REIMB.', fmt$(t.reimb), IMG.text], ['− DEDUCTIONS', t.ded > 0 ? `−${fmt$(t.ded)}` : fmt$(0), t.ded > 0 ? IMG.red : IMG.text], ['TOTAL', fmt$(t.total), IMG.text]
+    ];
+    const sw = (CW - 28 - 12) / 3;
+    stats.forEach(([l, v, color], i) => {
+      const x = P + 14 + (i % 3) * (sw + 6);
+      const sy = y + 44 + Math.floor(i / 3) * 68;
+      box(x, sy, sw, 62, 10, IMG.chip);
+      font(`600 10px ${FONT_B}`); text(l, x + sw / 2, sy + 22, IMG.muted, 'center');
+      font(`700 18px ${FONT_C}`); text(fitText(m, v, sw - 8), x + sw / 2, sy + 48, color, 'center');
     });
-    y += 136;
+    y += 204;
 
     // Days
     const dates = periodDates(p).filter(date => {
       const d = getDay(date);
-      return d && ((d.status === 'worked' && shift(d)) || d.status === 'off' || dayReimb(d) > 0);
+      return d && ((d.status === 'worked' && shift(d)) || d.status === 'off' || dayReimb(d) > 0 || dayDed(d) > 0);
     });
     label('DAILY BREAKDOWN', y + 4);
     y += 14;
@@ -2654,6 +2752,7 @@ body.readonly .rate-field input { pointer-events: none; }
       const sh = d.status === 'worked' ? shift(d) : null;
       const off = d.status === 'off';
       const reimb = dayReimb(d);
+      const ded = dayDed(d);
       const nx = P + 68;
       const rightW = 84;
       font(`400 13px ${FONT_B}`);
@@ -2684,6 +2783,7 @@ body.readonly .rate-field input { pointer-events: none; }
       };
       if (off) pill('Day off', IMG.red, IMG.redSoft);
       if (reimb > 0) pill('🧾 ' + fmt$(reimb), IMG.accent, IMG.accentSoft);
+      if (ded > 0) pill('🔻 ' + fmt$(ded), IMG.red, IMG.redSoft);
 
       if (sh) {
         font(`500 12px ${FONT_B}`);
@@ -2698,20 +2798,22 @@ body.readonly .rate-field input { pointer-events: none; }
       font(`400 13px ${FONT_B}`);
       const sub = sh
         ? [fmtRange(d), sh.brk ? `☕ ${fmtBreak(sh.brk)}` : '', d.site && d.site.trim()].filter(Boolean).join(' · ')
-        : off ? 'Not working' : 'Reimbursement only';
+        : off ? 'Not working' : 'Reimbursements / deductions only';
       text(fitText(m, sub, CW - 68 - 14 - rightW), nx, y + 51, IMG.muted);
       notes.forEach((ln, i) => text(ln, nx, y + 70 + i * 17, IMG.muted));
       y += h + 8;
     });
 
-    // Reimbursements
-    const items = periodReimbItems(p).filter(({ r }) => num(r.amount) > 0).map(({ date, r }) => {
-      const c = catInfo(r);
-      return { left: `${c.emoji} ${c.name}${r.desc && r.desc.trim() ? ' — ' + oneLine(r.desc) : ''}`, date: shortDate(date), amt: num(r.amount) };
-    });
-    if (items.length) {
+    // Reimbursements, then deductions
+    [['reimb', 'REIMBURSEMENTS'], ['ded', 'DEDUCTIONS']].forEach(([kind, heading]) => {
+      const color = KINDS[kind].sign < 0 ? IMG.red : IMG.text;
+      const items = periodItems(kind, p).filter(({ r }) => num(r.amount) > 0).map(({ date, r }) => {
+        const c = catInfo(r, kind);
+        return { left: `${c.emoji} ${c.name}${r.desc && r.desc.trim() ? ' — ' + oneLine(r.desc) : ''}`, date: shortDate(date), amt: num(r.amount) };
+      });
+      if (!items.length) return;
       y += 6;
-      label('REIMBURSEMENTS', y + 4);
+      label(heading, y + 4);
       y += 14;
       const rowH = 40;
       const rh = 10 + items.length * rowH + 44;
@@ -2720,14 +2822,14 @@ body.readonly .rate-field input { pointer-events: none; }
         const ry = y + 10 + i * rowH;
         font(`500 14px ${FONT_B}`); text(fitText(m, it.left, CW - 28 - 90), P + 14, ry + 17, IMG.text);
         font(`400 12px ${FONT_B}`); text(it.date, P + 14, ry + 33, IMG.muted);
-        font(`600 16px ${FONT_C}`); text(fmt$(it.amt), W - P - 14, ry + 24, IMG.text, 'right');
+        font(`600 16px ${FONT_C}`); text(signed(kind, it.amt), W - P - 14, ry + 24, color, 'right');
       });
       const ly = y + 10 + items.length * rowH + 4;
       if (g) { g.fillStyle = IMG.border; g.fillRect(P + 14, ly, CW - 28, 1); }
       font(`600 14px ${FONT_B}`); text('Subtotal', P + 14, ly + 26, IMG.text);
-      font(`700 17px ${FONT_C}`); text(fmt$(t.reimb), W - P - 14, ly + 26, IMG.text, 'right');
+      font(`700 17px ${FONT_C}`); text(signed(kind, t[kind]), W - P - 14, ly + 26, color, 'right');
       y += rh + 8;
-    }
+    });
 
     // Totals (mirrors the app's bottom bar)
     y += 6;
@@ -2737,7 +2839,7 @@ body.readonly .rate-field input { pointer-events: none; }
     font(`700 30px ${FONT_C}`); text(fmtH(t.hours), P + 61, y + 74, '#fff', 'center');
     font(`700 11px ${FONT_B}`); text('💵 TOTAL CASH', P + 126, y + 36, IMG.muted);
     font(`700 34px ${FONT_C}`); text(fitText(m, fmt$(t.total), CW - 126), P + 126, y + 70, IMG.text);
-    font(`500 12px ${FONT_B}`); text(fitText(m, `Wages ${fmt$(t.wages)} · Reimb. ${fmt$(t.reimb)}`, CW - 126), P + 126, y + 89, IMG.muted);
+    font(`500 12px ${FONT_B}`); text(fitText(m, `Wages ${fmt$(t.wages)} · +${fmt$(t.reimb)}${t.ded > 0 ? ` · −${fmt$(t.ded)}` : ''}`, CW - 126), P + 126, y + 89, IMG.muted);
     y += 104 + 22;
 
     const now = new Date();
@@ -2824,7 +2926,7 @@ body.readonly .rate-field input { pointer-events: none; }
   $('#sendBtn').addEventListener('click', () => {
     flush();
     const { text, title, totals } = buildReport();
-    if (!totals.worked && totals.reimb <= 0 && !totals.off) {
+    if (!totals.worked && totals.reimb <= 0 && totals.ded <= 0 && !totals.off) {
       toast('Nothing to send yet — log some hours first');
       return;
     }
@@ -2884,7 +2986,8 @@ body.readonly .rate-field input { pointer-events: none; }
       d.sh || '', d.sm || '', d.eh || '', d.em || '',
       Math.round(num(d.brk)),
       d.site || '', d.notes || '',
-      (d.reimb || []).filter(r => num(r.amount) > 0).map(r => { const c = catInfo(r); return [c.emoji, c.name, r.amount, r.desc || '']; })
+      ...KIND_KEYS.map(kind => (d[KINDS[kind].field] || []).filter(r => num(r.amount) > 0)
+        .map(r => { const c = catInfo(r, kind); return [c.emoji, c.name, r.amount, r.desc || '']; }))
     ]);
     return {
       v: 1, n: state.settings.name || '', cur: state.settings.currency, clk: state.settings.clock,
@@ -2937,15 +3040,17 @@ body.readonly .rate-field input { pointer-events: none; }
     if (!PERIOD_TYPES.some(([t]) => t === type) || !isDate(start) || !isDate(end) || end < start || dayDiff(end, start) > 31) throw new Error('Invalid period');
     state.settings = normalizeSettings({ name: o.n, currency: o.cur, clock: o.clk, periodType: type, onboarded: true, installHintDismissed: true });
     state.settings.categories = []; // keep the sender's own emoji and type names
+    state.settings.dedCategories = [];
     viewRate = Math.max(0, num(o.r));
     state.period = { type, start, end };
     state.days = {};
     o.d.forEach(row => {
       if (!Array.isArray(row)) return;
-      const [date, st, sh, sm, eh, em, brk, site, notes, re] = row;
+      const [date, st, sh, sm, eh, em, brk, site, notes, re, de] = row;
+      const items = list => (Array.isArray(list) ? list : []).filter(Array.isArray).map((x, i) => ({ id: `v${i}`, emoji: x[0], type: x[1], amount: x[2], desc: x[3] }));
       const d = normalizeDay({
         date, status: st === 'w' ? 'worked' : st === 'o' ? 'off' : undefined, sh, sm, eh, em, brk, site, notes,
-        reimb: (Array.isArray(re) ? re : []).filter(Array.isArray).map((x, i) => ({ id: `v${i}`, emoji: x[0], type: x[1], amount: x[2], desc: x[3] }))
+        reimb: items(re), ded: items(de)
       });
       if (d && d.date >= start && d.date <= end) state.days[d.date] = d;
     });

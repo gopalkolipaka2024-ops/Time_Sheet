@@ -17,6 +17,8 @@ enter stays on your own phone.
 - ✅ **Worked or day off.** Mark each day; days off are shown in red.
 - 📍 **Site and notes.** Add the job site and any notes for each day.
 - 🧾 **Reimbursements.** Add as many as you need: 🚕 Cab, 🍔 Meals, 🅿️ Parking, ⛽ Fuel, or your own types.
+- 🔻 **Deductions.** Record money your employer takes out of your pay: 💸 advances, 🛠️ tools, 🦺 safety gear,
+  👕 uniform, 🏠 housing, 🚐 transport, or your own types. **💵 Total cash = wages + reimbursements − deductions.**
 - 📅 **Pay periods.** Half-monthly (1–15 and 16–end of month) by default, or weekly, bi-weekly or monthly.
 - 📤 **Send.** Share the timesheet as a 💬 text message, a 📄 page image, or a 🔗 **view-only link**. The
   link opens like the app (scroll, tap days for details) but can't be edited. Each option includes every
